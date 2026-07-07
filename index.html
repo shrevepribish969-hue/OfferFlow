@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OfferFlow - 现代 SaaS 风格秋招看板与 AI 工作台</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#4F7CFF',
+                            600: '#3b66eb',
+                            700: '#1d4ed8',
+                        }
+                    },
+                    borderRadius: {
+                        'xl': '12px',
+                        '2xl': '16px'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #F8FAFC;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+        /* Card shadows */
+        .card-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        /* Active Navigation Menu Link */
+        .nav-item.active {
+            background-color: rgba(79, 124, 255, 0.08);
+            color: #4F7CFF;
+            font-weight: 600;
+        }
+        /* Drawer animation transition */
+        .drawer-transition {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 overflow-hidden flex bg-[#F8FAFC]">
+
+    <!-- Sidebar Layout -->
+    <aside class="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between flex-shrink-0 z-20">
+        <div>
+            <!-- Logo area -->
+            <div class="px-6 py-5 flex items-center gap-3">
+                <div class="h-9 w-9 bg-gradient-to-tr from-brand-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-wind text-white text-base"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-slate-900 tracking-tight">OfferFlow</h1>
+                    <p class="text-[10px] text-slate-400 font-medium uppercase tracking-widest">秋招工作台</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links (Chinese) -->
+            <nav class="px-3 py-4 space-y-1">
+                <button data-view="dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-left">
+                    <i class="fa-solid fa-chart-line w-4 text-center"></i>
+                    <span>仪表盘</span>
+                </button>
+                <button data-view="applications" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-left">
+                    <i class="fa-solid fa-list-check w-4 text-center"></i>
+                    <span>投递看板</span>
+                </button>
+                <button data-view="companies" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-left">
+                    <i class="fa-solid fa-building w-4 text-center"></i>
+                    <span>公司管理</span>
+                </button>
+                <button data-view="calendar" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-left">
+                    <i class="fa-regular fa-calendar w-4 text-center"></i>
+                    <span>日历日程</span>
+                </button>
+                <button data-view="analytics" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-left">
+                    <i class="fa-solid fa-chart-pie w-4 text-center"></i>
+                    <span>数据分析</span>
+                </button>
+                <button data-view="ai-assistant" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-left">
+                    <i class="fa-solid fa-sparkles w-4 text-center text-brand-500 animate-pulse"></i>
+                    <span>AI 助手</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar footer (Settings) -->
+        <div class="p-4 border-t border-slate-200/60">
+            <button data-view="settings" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-left">
+                <i class="fa-solid fa-sliders w-4 text-center"></i>
+                <span>系统设置</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main View Area -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+
+        <!-- Top Header -->
+        <header class="h-16 bg-white border-b border-slate-200/80 px-8 flex items-center justify-between flex-shrink-0 z-10">
+            <!-- Search bar -->
+            <div class="relative w-80">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="global-search" placeholder="在 OfferFlow 中搜索..." class="w-full bg-slate-100/75 focus:bg-white border border-slate-100 focus:border-brand-500 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-600 outline-none transition duration-200">
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center gap-3">
+                <button id="btn-add-manual" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-keyboard text-[10px]"></i> 手动录入
+                </button>
+                <button id="btn-trigger-new-app" class="px-4 py-2 bg-[#4F7CFF] hover:bg-blue-600 text-white rounded-xl text-xs font-semibold flex items-center gap-2 transition duration-200 shadow-md shadow-brand-500/10">
+                    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> AI 极速录入
+                </button>
+                <div class="h-5 w-px bg-slate-200"></div>
+                <button id="btn-trigger-notif" class="p-2 hover:bg-slate-50 text-slate-400 hover:text-slate-600 rounded-xl transition relative" title="待跟进提醒">
+                    <i class="fa-regular fa-bell text-base"></i>
+                    <span id="notif-badge" class="hidden absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+                </button>
+                <div class="h-8 w-8 rounded-full bg-indigo-50 border border-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold shadow-sm" title="秋招加油">
+                    🎓
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Viewport containing Tab Divs -->
+        <div class="flex-1 overflow-auto relative p-8">
+
+            <!-- 1. DASHBOARD VIEW (仪表盘) -->
+            <div id="view-dashboard" class="tab-content space-y-8 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">秋招，加油！</h2>
+                    <p id="dashboard-subtitle" class="text-sm text-slate-500 mt-1">今天还有任务需要你跟进和完成。</p>
+                </div>
+
+                <!-- Metrics Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-5 rounded-2xl card-shadow flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">今日需跟进</span>
+                            <h3 id="metric-today-follow" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl card-shadow flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-microphone"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">进行中的面试</span>
+                            <h3 id="metric-today-interviews" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl card-shadow flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-plus-minus"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">意向/准备投递</span>
+                            <h3 id="metric-planned-apply" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content grid: Left (Tasks) & Right (Stats) -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <!-- Today's Tasks (Left, 3 cols) -->
+                    <div class="bg-white rounded-2xl card-shadow p-6 lg:col-span-3 flex flex-col h-[400px]">
+                        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-square-check text-brand-500"></i> 今日任务清单 (Today's Tasks)
+                            </h4>
+                            <button id="btn-add-task-quick" class="text-xs text-brand-500 hover:text-brand-600 font-semibold transition">
+                                <i class="fa-solid fa-plus"></i> 新增任务
+                            </button>
+                        </div>
+                        <!-- Tasks Container -->
+                        <div id="dashboard-tasks-container" class="flex-1 overflow-y-auto space-y-3 pr-1">
+                            <!-- Tasks template -->
+                        </div>
+                    </div>
+
+                    <!-- Statistics (Right, 2 cols) -->
+                    <div class="bg-white rounded-2xl card-shadow p-6 lg:col-span-2 flex flex-col h-[400px]">
+                        <div class="mb-4 border-b border-slate-100 pb-3">
+                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-chart-simple text-brand-500"></i> 本周投递简报
+                            </h4>
+                        </div>
+                        <!-- Mini metrics panel -->
+                        <div class="grid grid-cols-4 gap-2 text-center mb-6">
+                            <div class="p-2 bg-slate-50 rounded-xl">
+                                <span class="text-[10px] text-slate-400 font-medium">已投递</span>
+                                <p id="week-stat-apply" class="text-sm font-bold text-slate-800 mt-0.5">0</p>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded-xl">
+                                <span class="text-[10px] text-slate-400 font-medium">面试</span>
+                                <p id="week-stat-interview" class="text-sm font-bold text-slate-800 mt-0.5">0</p>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded-xl">
+                                <span class="text-[10px] text-slate-400 font-medium">Offer</span>
+                                <p id="week-stat-offer" class="text-sm font-bold text-slate-800 mt-0.5">0</p>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded-xl">
+                                <span class="text-[10px] text-slate-400 font-medium">感谢信</span>
+                                <p id="week-stat-reject" class="text-sm font-bold text-slate-800 mt-0.5">0</p>
+                            </div>
+                        </div>
+                        <!-- Mini SVG chart box -->
+                        <div class="flex-1 flex flex-col justify-end">
+                            <span class="text-[10px] text-slate-400 font-medium mb-1">过去 7 天投递趋势图</span>
+                            <div id="weekly-svg-chart-container" class="w-full h-40 bg-slate-50 rounded-xl flex items-center justify-center p-2 relative">
+                                <!-- SVG Line Chart -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. APPLICATIONS VIEW (竖向流程看板，支持删除/新建阶段) -->
+            <div id="view-applications" class="tab-content flex flex-col h-full hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">投递看板</h2>
+                        <p class="text-sm text-slate-500 mt-1">流程从上往下流转，各阶段岗位横向滑动。支持拖拽卡片和自定义流程阶段。</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button id="btn-create-stage" class="px-3.5 py-1.5 bg-[#4F7CFF]/10 hover:bg-[#4F7CFF]/20 text-[#4F7CFF] border border-[#4F7CFF]/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-plus"></i> 新增阶段
+                        </button>
+                        <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                        <button id="board-filter-all" class="px-3 py-1.5 bg-[#4F7CFF]/10 text-[#4F7CFF] border border-[#4F7CFF]/20 rounded-lg text-xs font-semibold transition active">
+                            全部
+                        </button>
+                        <button id="board-filter-stale" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-exclamation text-amber-500"></i> 仅看超期滞留
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 垂直滚动的阶段盒子容器 -->
+                <div id="kanban-vertical-wrapper" class="flex-1 overflow-y-auto space-y-4 pr-2 pb-12">
+                    <!-- 由 JS 依据 stages 动态渲染出垂直排列的阶段行 -->
+                </div>
+            </div>
+
+            <!-- 3. COMPANIES VIEW (公司管理) -->
+            <div id="view-companies" class="tab-content flex gap-8 hidden h-[calc(100vh-160px)]">
+                <!-- Left Sidebar: Companies list -->
+                <div class="w-80 bg-white border border-slate-200 rounded-2xl flex flex-col p-4 shadow-sm">
+                    <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-building text-brand-500"></i> 公司名录
+                        </h3>
+                        <span id="company-total-badge" class="px-2 py-0.5 text-xs bg-slate-100 rounded-md font-semibold text-slate-500">0</span>
+                    </div>
+                    <!-- Search inside companies list -->
+                    <div class="relative mb-3">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="company-search-box" placeholder="搜索公司名称..." class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-600 outline-none focus:border-brand-500">
+                    </div>
+                    <!-- Companies scrolling container -->
+                    <div id="companies-list-container" class="flex-1 overflow-y-auto space-y-1">
+                        <!-- Company items -->
+                    </div>
+                </div>
+
+                <!-- Right Detail Panel -->
+                <div class="flex-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                    <div id="company-empty-detail" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
+                        <i class="fa-solid fa-building-circle-arrow-right text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-sm">在左侧选择一个公司查看详细关联岗位及进展</p>
+                    </div>
+                    <div id="company-main-detail" class="hidden flex-1 overflow-y-auto p-6 space-y-6">
+                        <!-- Header -->
+                        <div class="flex justify-between items-start border-b border-slate-100 pb-5">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-2xl font-bold uppercase shadow-sm">
+                                    🏢
+                                </div>
+                                <div>
+                                    <h3 id="comp-detail-name" class="text-xl font-bold text-slate-900"></h3>
+                                    <div class="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                                        <span id="comp-detail-loc"><i class="fa-solid fa-map-marker-alt"></i> </span>
+                                        <a id="comp-detail-web-link" href="#" target="_blank" class="text-brand-500 hover:underline"><i class="fa-solid fa-globe"></i> 访问官网</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Left Info -->
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">公司简介</h4>
+                                    <p id="comp-detail-intro" class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-200/40 min-h-24 whitespace-pre-wrap"></p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-3 bg-slate-50 border border-slate-200/40 rounded-xl">
+                                        <span class="text-[10px] text-slate-400 uppercase font-semibold">HR 联络人</span>
+                                        <p id="comp-detail-hr" class="text-sm font-semibold text-slate-700 mt-1">未填</p>
+                                    </div>
+                                    <div class="p-3 bg-slate-50 border border-slate-200/40 rounded-xl">
+                                        <span class="text-[10px] text-slate-400 uppercase font-semibold">相关部门</span>
+                                        <p id="comp-detail-dept" class="text-sm font-semibold text-slate-700 mt-1">未填</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">公司备忘录</h4>
+                                    <textarea id="comp-detail-notes" placeholder="记录关于该大厂的背景信息、面试常见考点..." class="w-full h-24 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-3 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                                    <button id="btn-save-company-notes" class="mt-2 px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-semibold hover:bg-slate-700 transition">保存备注</button>
+                                </div>
+                            </div>
+
+                            <!-- Right Info -->
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">在此投递的岗位</h4>
+                                    <div id="comp-detail-jobs-list" class="space-y-2 max-h-44 overflow-y-auto">
+                                        <!-- Associated Job items -->
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">投递事件时间轴</h4>
+                                    <div id="comp-detail-timeline" class="border-l-2 border-slate-100 pl-4 space-y-4 max-h-48 overflow-y-auto">
+                                        <!-- Timeline items -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. CALENDAR VIEW (日历日程) -->
+            <div id="view-calendar" class="tab-content space-y-6 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">日历日程</h2>
+                        <p class="text-sm text-slate-500 mt-1">Google Calendar 风格周视图，双击空白处可手动添加日程或备忘任务</p>
+                    </div>
+                </div>
+
+                <!-- Google Calendar Grid -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm overflow-hidden flex flex-col">
+                    <div id="calendar-week-range" class="text-center font-bold text-slate-700 mb-6 text-sm">
+                        <!-- Dates -->
+                    </div>
+                    
+                    <div class="grid grid-cols-5 gap-4 divide-x divide-slate-100">
+                        <!-- Mon - Fri Columns -->
+                        <div class="calendar-day px-2 min-h-[400px]" data-day="1">
+                            <div class="text-center pb-3 border-b border-slate-100">
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">周一</span>
+                                <span class="calendar-date-num block text-lg font-bold text-slate-800 mt-1"></span>
+                            </div>
+                            <div class="calendar-events-container mt-3 space-y-2"></div>
+                        </div>
+                        <div class="calendar-day px-2 min-h-[400px]" data-day="2">
+                            <div class="text-center pb-3 border-b border-slate-100">
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">周二</span>
+                                <span class="calendar-date-num block text-lg font-bold text-slate-800 mt-1"></span>
+                            </div>
+                            <div class="calendar-events-container mt-3 space-y-2"></div>
+                        </div>
+                        <div class="calendar-day px-2 min-h-[400px]" data-day="3">
+                            <div class="text-center pb-3 border-b border-slate-100">
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">周三</span>
+                                <span class="calendar-date-num block text-lg font-bold text-slate-800 mt-1"></span>
+                            </div>
+                            <div class="calendar-events-container mt-3 space-y-2"></div>
+                        </div>
+                        <div class="calendar-day px-2 min-h-[400px]" data-day="4">
+                            <div class="text-center pb-3 border-b border-slate-100">
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">周四</span>
+                                <span class="calendar-date-num block text-lg font-bold text-slate-800 mt-1"></span>
+                            </div>
+                            <div class="calendar-events-container mt-3 space-y-2"></div>
+                        </div>
+                        <div class="calendar-day px-2 min-h-[400px]" data-day="5">
+                            <div class="text-center pb-3 border-b border-slate-100">
+                                <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">周五</span>
+                                <span class="calendar-date-num block text-lg font-bold text-slate-800 mt-1"></span>
+                            </div>
+                            <div class="calendar-events-container mt-3 space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. ANALYTICS VIEW (数据分析) -->
+            <div id="view-analytics" class="tab-content space-y-8 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">数据分析</h2>
+                    <p class="text-sm text-slate-500 mt-1">秋招求职转化模型分析与响应渠道统计</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Funnel Flow (Left) -->
+                    <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col h-[380px]">
+                        <h4 class="font-bold text-slate-800 text-sm mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-filter text-brand-500"></i> 求职漏斗模型 (Offer Funnel)
+                        </h4>
+                        <div id="analytics-funnel-container" class="flex-1 flex flex-col justify-center space-y-4">
+                            <!-- Funnel step -->
+                        </div>
+                    </div>
+
+                    <!-- Platform ratio (Right) -->
+                    <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col h-[380px]">
+                        <h4 class="font-bold text-slate-800 text-sm mb-6 pb-2 border-b border-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-share-nodes text-brand-500"></i> 渠道投递与响应率 (Response Rate)
+                        </h4>
+                        <div id="analytics-platform-container" class="flex-1 overflow-y-auto space-y-5 pr-1">
+                            <!-- Platform progress energy bars -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. AI ASSISTANT VIEW (AI 问答助手) -->
+            <div id="view-ai-assistant" class="tab-content hidden h-[calc(100vh-160px)]">
+                <div class="h-full bg-white border border-slate-200 rounded-2xl shadow-sm flex overflow-hidden">
+                    <div class="flex-1 flex flex-col">
+                        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-500">
+                                    <i class="fa-solid fa-sparkles"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-800">秋招 AI 求职顾问</h4>
+                                    <span class="text-[10px] text-slate-400">结合你的本地投递看板与个人简历进行分析</span>
+                                </div>
+                            </div>
+                            <button id="btn-clear-global-chat" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition">
+                                清空对话记录
+                            </button>
+                        </div>
+                        <div id="global-chat-messages" class="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/20 text-xs">
+                            <!-- Messages -->
+                        </div>
+                        <div class="p-4 border-t border-slate-100 bg-white">
+                            <form id="global-chat-form" class="flex gap-2">
+                                <input type="text" id="global-chat-input" placeholder="输入你想咨询的求职常识、策略，或者对你现有岗位进行分析提问..." class="flex-1 bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs text-slate-800 outline-none transition">
+                                <button type="submit" class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold transition shrink-0">
+                                    发送
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. SETTINGS VIEW (系统设置，支持简历大文本横放) -->
+            <div id="view-settings" class="tab-content space-y-6 hidden max-w-6xl">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">系统设置</h2>
+                    <p class="text-sm text-slate-500 mt-1">全局接口配置及大模型配置</p>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <!-- Global Configuration (Top, 100% width) -->
+                    <div class="bg-white rounded-2xl card-shadow p-6 space-y-4 w-full">
+                        <h4 class="font-bold text-slate-800 text-sm border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-gears text-brand-500"></i> AI大模型接口配置
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">API Base URL (端点)</label>
+                                <input type="text" id="set-base-url" placeholder="https://api.deepseek.com/v1" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs outline-none transition duration-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">API Key</label>
+                                <input type="password" id="set-api-key" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs outline-none transition duration-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">大模型名称 (Model)</label>
+                                <input type="text" id="set-model-name" placeholder="deepseek-chat" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs outline-none transition duration-200">
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-100">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">默认跟进提醒周期 (天)</label>
+                                <input type="number" id="set-warning-days" value="5" min="1" class="w-48 bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs outline-none transition duration-200">
+                            </div>
+                            <div class="flex items-center gap-2 pt-2">
+                                <input type="checkbox" id="set-enable-notif" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                                <label for="set-enable-notif" class="text-xs text-slate-600">启用浏览器 Notification 系统弹窗通知 (需要通知权限)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Resume Content Card (Bottom, Horizontal layout, 100% width) -->
+                    <div class="bg-white rounded-2xl card-shadow p-6 flex flex-col w-full h-[380px]">
+                        <h4 class="font-bold text-slate-800 text-sm border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice text-brand-500"></i> 我的个人简历 (简历大框横着放)
+                        </h4>
+                        <div class="flex-1 flex flex-col gap-2 mt-4">
+                            <label class="text-[10px] text-slate-400 font-semibold uppercase">将简历纯文本粘贴于此 (AI 助手将调取此内容做匹配建议)</label>
+                            <textarea id="set-resume-text" placeholder="在此处粘贴你的中文简历纯文本（包括教育经历、实习、项目开发经验等）。它在你的本地安全存储。当你分析具体岗位或使用 AI 诊断时，助手会自动结合它为你提供建议。" class="flex-1 w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-brand-500 rounded-xl p-4 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center w-full">
+                    <button id="btn-save-settings" class="px-6 py-2.5 bg-[#4F7CFF] hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition duration-200 shadow-md shadow-brand-500/10">
+                        保存全局配置与简历
+                    </button>
+                    <div class="flex gap-2">
+                        <button id="btn-export" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition">
+                            <i class="fa-solid fa-download"></i> 导出备份数据
+                        </button>
+                        <button id="btn-import" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition">
+                            <i class="fa-solid fa-upload"></i> 导入备份数据
+                        </button>
+                        <input type="file" id="file-import-input" class="hidden" accept=".json">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ──────────────────────────────────────────── -->
+    <!-- SLIDE DRAWERS & MODALS -->
+    <!-- ──────────────────────────────────────────── -->
+
+    <!-- Modal: Add Custom Stage (新增流程阶段弹窗) -->
+    <div id="modal-new-stage" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-[400px] glass-panel bg-white rounded-2xl p-6 shadow-2xl scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus text-brand-500"></i> 新增流程阶段
+                </h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="form-new-stage" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">阶段名称 <span class="text-red-500">*</span></label>
+                    <input type="text" id="stage-name-input" required placeholder="例如：测评中、Offer抉择" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs text-slate-700 outline-none transition">
+                </div>
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" class="btn-close-modal px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition">取消</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition">确认新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: New Application (智能解析录入弹窗) -->
+    <div id="modal-new-app" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-[600px] glass-panel bg-white rounded-2xl p-6 shadow-2xl scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-brand-500"></i> 新增岗位：极速 AI 识别
+                </h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">招聘岗位 JD 描述 (粘贴整段要求)</label>
+                    <textarea id="parse-jd-input" placeholder="将你复制的岗位详情职责文本直接贴在此处。大模型将自动解析出公司名称、投递岗位、工作城市以及要求总结。" class="w-full h-56 bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl p-3 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">官网投递/查询进度链接 (URL)</label>
+                    <input type="url" id="parse-url-input" placeholder="贴入当前岗位的投递链接或官网查询进度网址..." class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-600 outline-none transition">
+                </div>
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" class="btn-close-modal px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition">取消</button>
+                    <button id="btn-submit-new-app" class="px-5 py-2 bg-[#4F7CFF] hover:bg-blue-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-2">
+                        <span id="new-app-btn-text">⚡ 智能识别解析</span>
+                        <div id="new-app-spinner" class="hidden w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: AI Parse Confirmation (预览确认弹窗，下拉菜单动态化) -->
+    <div id="modal-ai-confirm" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-[500px] glass-panel bg-white rounded-2xl p-6 shadow-2xl scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-500"></i> AI 提取结果确认
+                </h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="form-ai-confirm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">公司名称 <span class="text-red-500">*</span></label>
+                        <input type="text" id="confirm-company" required class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">投递岗位 <span class="text-red-500">*</span></label>
+                        <input type="text" id="confirm-position" required class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">工作城市</label>
+                        <input type="text" id="confirm-location" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">投递日期</label>
+                        <input type="date" id="confirm-date" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">投递状态</label>
+                        <!-- Options dynamically inserted from setting stages -->
+                        <select id="confirm-status" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">跟进期限 (天)</label>
+                        <input type="number" id="confirm-followup" value="5" min="1" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">来源渠道</label>
+                    <input type="text" id="confirm-platform" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">官网链接</label>
+                    <input type="url" id="confirm-url" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">AI 整理职责要求 (JD Summary)</label>
+                    <textarea id="confirm-jd" class="w-full h-20 bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl p-3 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" class="btn-close-modal px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition">取消</button>
+                    <button type="submit" class="px-5 py-2 bg-[#4F7CFF] hover:bg-blue-600 text-white rounded-lg text-xs font-bold transition">确认并保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add / Edit Card (修改/手动登记岗位) -->
+    <div id="modal-edit-card" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-[550px] glass-panel bg-white rounded-2xl p-6 shadow-2xl scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h3 id="modal-card-title" class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-file-signature text-indigo-400"></i> 手动录入岗位
+                </h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="form-job-card" class="space-y-4">
+                <input type="hidden" id="card-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">公司名称 <span class="text-red-500">*</span></label>
+                        <input type="text" id="card-company" required placeholder="如：网易" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">投递岗位 <span class="text-red-500">*</span></label>
+                        <input type="text" id="card-position" required placeholder="如：产品经理" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">投递状态</label>
+                        <!-- Dynamic select -->
+                        <select id="card-status" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">工作城市</label>
+                        <input type="text" id="card-location" placeholder="如：北京" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">官网链接</label>
+                        <input type="url" id="card-url" placeholder="投递的官网 URL 链接" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">投递日期</label>
+                        <input type="date" id="card-date" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">预计跟进天数 (天)</label>
+                        <input type="number" id="card-followup" value="5" min="1" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">岗位要求简述 (JD)</label>
+                    <textarea id="card-jd" class="w-full h-24 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">备注进度 / 面试心得</label>
+                    <textarea id="card-notes" placeholder="这里记下当前进展或计划安排..." class="w-full h-20 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                </div>
+                <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                    <button type="button" id="btn-delete-card" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg text-xs font-semibold transition hidden">
+                        <i class="fa-solid fa-trash-can"></i> 删除岗位
+                    </button>
+                    <div class="flex gap-3 ml-auto">
+                        <button type="button" class="btn-close-modal px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition">取消</button>
+                        <button type="submit" class="px-5 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition shadow-md shadow-brand-500/10">保存记录</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Custom Task/Calendar event (添加自定义日程任务) -->
+    <div id="modal-custom-event" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="w-[450px] glass-panel bg-white rounded-2xl p-6 shadow-2xl scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-plus text-brand-500"></i> 新建日程 / 待办事项
+                </h3>
+                <button class="btn-close-modal text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="form-custom-event" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">事务内容 <span class="text-red-500">*</span></label>
+                    <input type="text" id="event-title" required placeholder="如：准备网易产品经理笔试" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs text-slate-700 outline-none transition">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">类型</label>
+                        <select id="event-type" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition">
+                            <option value="interview">面试日程 (绿色)</option>
+                            <option value="followup">进度跟进 (橙色)</option>
+                            <option value="deadline">投递截止 (红色)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">日期</label>
+                        <input type="date" id="event-date" required class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-4 py-2.5 text-xs text-slate-700 outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">关联投递岗位 (可选)</label>
+                    <select id="event-job-id" class="w-full bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition"></select>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" class="btn-close-modal px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition">取消</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold transition">保存记录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ──────────────────────────────────────────── -->
+    <!-- SLIDE Drawer: Application Detail (岗位详情抽屉双栏布局) -->
+    <!-- ──────────────────────────────────────────── -->
+    <div id="drawer-job-detail" class="fixed top-0 right-0 h-full w-[1000px] bg-white border-l border-slate-200 shadow-2xl z-40 transform translate-x-full drawer-transition flex flex-col">
+        <!-- Header -->
+        <div class="h-16 px-6 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-500 shadow-md animate-pulse"></span>
+                <h3 id="drawer-header-title" class="font-bold text-slate-800 text-sm">Alibaba - AI Product Manager</h3>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="btn-delete-drawer-card" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg text-xs font-semibold transition">
+                    <i class="fa-solid fa-trash-can"></i> 删除岗位
+                </button>
+                <button id="btn-close-drawer" class="p-2 hover:bg-slate-200/60 rounded-xl text-slate-400 hover:text-slate-600 transition">
+                    <i class="fa-solid fa-arrow-right-long text-sm"></i> 关闭详情
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Grid (Left Detail Form & Right Copilot Chat) -->
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Left Details Form -->
+            <div class="w-7/12 h-full overflow-y-auto p-6 space-y-6 border-r border-slate-100">
+                <form id="form-drawer-job" class="space-y-5">
+                    <input type="hidden" id="drawer-card-id">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">公司名称</label>
+                            <input type="text" id="drawer-card-company" required class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">投递岗位</label>
+                            <input type="text" id="drawer-card-position" required class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">投递阶段</label>
+                            <!-- Dynamic select -->
+                            <select id="drawer-card-status" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">工作城市</label>
+                            <input type="text" id="drawer-card-location" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">官网链接</label>
+                            <input type="url" id="drawer-card-url" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">投递日期</label>
+                            <input type="date" id="drawer-card-date" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">投递渠道</label>
+                            <input type="text" id="drawer-card-platform" placeholder="Boss直聘、官网、内推..." class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">跟进周期 (天)</label>
+                            <input type="number" id="drawer-card-followup" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">薪资待遇</label>
+                            <input type="text" id="drawer-card-salary" placeholder="如 25k*16" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">使用的简历版本</label>
+                            <input type="text" id="drawer-card-resume" placeholder="例如：产品通用简历版v2" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-4 py-2 text-xs text-slate-700 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">推荐优先评级</label>
+                        <select id="drawer-card-rating" class="w-full bg-slate-50 border border-slate-200/80 focus:border-brand-500 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition">
+                            <option value="5">★★★★★ (核心志愿 / 极力推荐)</option>
+                            <option value="4" selected>★★★★☆ (非常推荐)</option>
+                            <option value="3">★★★☆☆ (中等符合)</option>
+                            <option value="2">★★☆☆☆ (一般投递)</option>
+                            <option value="1">★☆☆☆☆ (保底垫底)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">岗位职责要求 (JD)</label>
+                        <textarea id="drawer-card-jd" class="w-full h-36 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-3 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">投递进展记录/面经备注</label>
+                        <textarea id="drawer-card-notes" placeholder="添加面试题目、笔试答题总结..." class="w-full h-24 bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl p-3 text-xs text-slate-600 outline-none transition resize-none"></textarea>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex justify-end">
+                        <button type="submit" class="px-5 py-2.5 bg-[#4F7CFF] hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition shadow-md shadow-brand-500/10">
+                            保存修改记录
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Panel: Fixed AI Sidebar Copilot inside drawer -->
+            <div class="w-5/12 h-full bg-slate-50/50 flex flex-col overflow-hidden">
+                <div class="p-4 border-b border-slate-200/80 bg-white">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5">AI 快速分析常用指令</span>
+                    <div class="grid grid-cols-2 gap-2 text-[10px] font-bold">
+                        <button type="button" data-ai-action="summary" class="btn-drawer-ai-action py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/40 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-list-check text-brand-500"></i> JD 职责提取
+                        </button>
+                        <button type="button" data-ai-action="match" class="btn-drawer-ai-action py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/40 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-star-half-stroke text-brand-500"></i> 匹配度分析
+                        </button>
+                        <button type="button" data-ai-action="suggest" class="btn-drawer-ai-action py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/40 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-file-pen text-brand-500"></i> 简历修改建议
+                        </button>
+                        <button type="button" data-ai-action="research" class="btn-drawer-ai-action py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/40 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-search text-brand-500"></i> 公司背景研究
+                        </button>
+                        <button type="button" data-ai-action="questions" class="btn-drawer-ai-action py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/40 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-circle-question text-brand-500"></i> 面试真题预测
+                        </button>
+                        <button type="button" data-ai-action="email" class="btn-drawer-ai-action py-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/40 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-envelope text-brand-500"></i> 投递跟进邮件
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat history and input -->
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <div id="drawer-chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 text-xs">
+                        <div class="flex gap-2">
+                            <div class="w-6 h-6 rounded-full bg-brand-500/10 flex items-center justify-center text-brand-500 flex-shrink-0 text-[10px]">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+                            <div class="bg-white border border-slate-200/80 rounded-2xl rounded-tl-none px-3 py-2 max-w-[85%] text-slate-700 shadow-sm leading-relaxed">
+                                你好！我是你的求职小助手。点击上方快捷动作，我可以直接结合你的简历开展针对性诊断。
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-slate-200/80 bg-white">
+                        <form id="drawer-chat-form" class="flex gap-2">
+                            <input type="text" id="drawer-chat-input" placeholder="输入对话以咨询当前绑定的岗位..." class="flex-1 bg-slate-50 border border-slate-200 focus:border-brand-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                            <button type="submit" class="w-8 h-8 bg-brand-500 hover:bg-brand-600 text-white rounded-lg flex items-center justify-center flex-shrink-0 transition">
+                                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Entry -->
+    <script src="app.js"></script>
+</body>
+</html>
