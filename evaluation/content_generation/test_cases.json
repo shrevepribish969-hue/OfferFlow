@@ -1,0 +1,30 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Follow-up Email Generation",
+    "input": {
+      "jd_analysis_result": { "role": "AI产品经理" },
+      "optimized_resume_json": { "skills": [{ "name": "Prompt Engineering" }] },
+      "user_generation_goal": "写一封一面后的感谢信，提一下我做的Prompt调优",
+      "generation_constraints": {
+        "language": "English",
+        "tone": "Professional",
+        "length": "Under 200 words"
+      }
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Invalid Intent Rejection",
+    "input": {
+      "jd_analysis_result": { "role": "AI产品经理" },
+      "optimized_resume_json": { "skills": [{ "name": "Prompt Engineering" }] },
+      "user_generation_goal": "给我推荐几部关于人工智能的科幻电影吧",
+      "generation_constraints": {
+        "language": "Chinese",
+        "tone": "Casual",
+        "length": "Short"
+      }
+    }
+  }
+]

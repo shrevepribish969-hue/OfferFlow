@@ -1,0 +1,28 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Interview Scheduled Transition",
+    "input": {
+      "job_case_status": "Interview_Scheduled",
+      "timeline_events": [
+        { "event_type": "Interview_Date", "timestamp": "2026-08-01T10:00:00Z" }
+      ]
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Rejected State Planning",
+    "input": {
+      "job_case_status": "Rejected",
+      "timeline_events": []
+    }
+  },
+  {
+    "case_id": "case_3",
+    "description": "Unknown Status",
+    "input": {
+      "job_case_status": "ASDFGHJKL",
+      "timeline_events": []
+    }
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "case_id": "case_1",
+    "expected_output": {
+      "exact_match": {},
+      "semantic_match": {
+        "mock_questions": [
+          "智能客服",
+          "大模型",
+          "ToB",
+          "商业化"
+        ]
+      },
+      "tool_calls": [
+        {
+          "action": "Save_Interview_Preparation",
+          "parameters": {
+            "job_case_id": "string",
+            "interview_prep_result": "object"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "case_id": "case_2",
+    "expected_output": {
+      "exact_match": {
+        "status": "error",
+        "error_code": "MISSING_JD_CONTEXT"
+      }
+    }
+  }
+]

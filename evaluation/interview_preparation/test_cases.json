@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Generate Questions targeting weakness",
+    "input": {
+      "jd_analysis_result": { "skills": [{ "name": "大模型落地", "importance": "must" }] },
+      "optimized_resume_json": { "project_experiences": [{ "description": "智能客服机器人" }] },
+      "user_weakness_memory": ["缺乏ToB商业化变现思考"]
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Missing JD Context",
+    "input": {
+      "jd_analysis_result": {},
+      "optimized_resume_json": { "project_experiences": [{ "description": "智能客服机器人" }] },
+      "user_weakness_memory": []
+    }
+  }
+]

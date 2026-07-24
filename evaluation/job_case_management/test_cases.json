@@ -1,0 +1,26 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Natural Language Stage Update (Pass)",
+    "input": {
+      "user_utterance": "我一面过了，HR说下周二约二面。",
+      "current_stage": "Applied"
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Natural Language Stage Update (Reject)",
+    "input": {
+      "user_utterance": "收到了感谢信，白忙活了。",
+      "current_stage": "Interview_Scheduled"
+    }
+  },
+  {
+    "case_id": "case_3",
+    "description": "No Change",
+    "input": {
+      "user_utterance": "还在等消息，不知道啥时候出结果。",
+      "current_stage": "Applied"
+    }
+  }
+]

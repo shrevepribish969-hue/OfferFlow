@@ -1,0 +1,2300 @@
+{
+  "questions": [
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "个人信息",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "做一个简单的自我介绍",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你有最大的优点是?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你最大的缺点是?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你认为你的核心竞争力是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你最近5 年的职业规划是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "别人对你的评价是?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你以往工作中遇到最大的困难？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你希望与什么样的上级共事？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你了解过我们公司/产品吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "为什么来应聘这个岗位?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你能为我们带来什么?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "最快什么时候可以入职?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你的期望薪资是多少?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "通用问题",
+      "question": "你有什么事情想要问我的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": null,
+      "question": "英文自我介绍",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "可以介绍一下这个项目吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "那请你介绍一下之前你们的产品和盈利模式以及用户画像需求使用场景是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "你们项目的目标是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "项目相对于竞品的优势",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "项目用户和内容来源",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "项目定位，与优势",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "为什么觉得这个项目是最有价值的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "为什么决定要做这个需求，需求从哪里来的，怎么判断优先级",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "XXX 项目的人群你说是年轻一代，人群如何分层，有哪几类人群，市场目标人群市场占比如何？的竞品有哪些，在哪些场景使用？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "在上一段实习的工作kol 建联上，你负责了什么？这些是已有的沟通模式吗？你在其中做什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "针对上面的案例追问，该品牌的核心人群是什么，我所产出的洞察点是什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "上一段实习中，KOL 查找有什么样的标准",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "有没有做过用户调研？如何做的",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "有没有做过竞品分析，你认为你们的优势在什么地方",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "为什么要做这个网站？团队有几个人？分工？有没有做调研？结果是什么？跟市场上成熟的网站相比，自己的优劣势？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "核心指标是什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "之前对于分模块用户诉点的评估是怎么评估的，评估标准和框架都有哪些",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "需求从哪里来？ROI 如何计算？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "关注哪些指标？指标计算维度？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "怎么设定指标和做这个事情的目标",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "具体到了做了哪些功能以及逻辑是如何实现的，以及简历上说的每个指标都代表什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "跟进项目的参与度，成本项与计费项的核算具体做了些什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "你们主要看什么指标？项目收益是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "讲一下认为做的最好的需求以及相关指标？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "如果再来一遍，你会怎么做这个项目",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "遇到的最大困难是什么，以及如何解决的",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "这个项目如果抽象成具体的功能模块，你做了哪些",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "举一个具体的你改进了产品的例子，全流程",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "项目中最有价值的部分",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "你对这个项目做的贡献",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "在项目中遇到的困难",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "在整个项目中整体流程是怎么样的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "背景、承担的角色，项目内容，出现冲突的时候怎么解决，举一个具体的例子。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "你是如何解决这些困难的，或者说如何培养与客户的沟通能力呢？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "实习中在撬动商家入驻上，有出现什么问题吗？商家对资源位有什么疑问吗？你在其中起到什么作用？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "梳理后核心问题是什么？后续做了哪些需求？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "你们组目前的业务核心是啥？你在其中做了哪些工作？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "为什么这个指标的提升是你这个项目带来的，如何归因",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "具体说一下你们是怎么完成这个项目的，过程中是怎么进行项目管理的",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "为广告主提供的策略一整套打下来后，对广告主的实际效果是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "为什么要推出这个应用？具体有哪些指标，得出了怎样的结论，怎么得出的结论，哪里做的不够好。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "回过头来看当时有什么做的不够好的地方",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "回头复盘这个项目，可迭代优化的地方",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "在这段经历中你觉得最大的收获是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": "项目/经历类问题",
+      "question": "在实习中，你的产出有哪些？团队和老板都是怎么评价的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那你如何看待AIGC 在教育或者知识行业领域的应用前景呢？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那你认为AIGC 在教育理念当中可以发挥到哪些作用？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "你最近有过哪个体验感比较好的AI 产品呢？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那如果现在让你使用ChatGPT 创业你会选择哪个方向，为什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "你认为未来哪些商业模式和产品策略可能会更有前景？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那你对于目前市面上的大语言模型有哪些了解？你觉得字节的优势和不足点有哪些？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那你觉得现在aigc 创业有哪些方向？你更看好的是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那你认为在教育或者知识行业中大语言模型技术在未来会产生哪些创新性的应用？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那你认为如何去处理AIGC 技术和人工之间的平衡问题。或者说你认为AIGC 技术和人工应该如何配合和协同工作？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "在产品的开发过程当中，如何去权衡产品的稳定性和风险，并且做出合适的决策？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "当前技术发展日新月异，那么在产品的开发过程当中，如何保证产品的创新能力？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "那你平时是怎么去保持对技术趋势和发展的关注和学习的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "你如何去评价目前市面上国产的大语言模型和产品",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "最喜欢的app 是什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "你对商业化有什么了解",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "如果发现数据指标突然下降，你会怎么排查",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "了解智能机器人吗，你觉得做的好的地方和不好的地方",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "硬件产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "你了解竞价广告的链路吗？主要是c 端方向的",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "硬件产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "广告是cpc 还是ocpc？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "硬件产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "你在的行业和其他行业有什么不同？粗颗粒地说",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "硬件产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "三扇门获胜概率问题",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音策略评估",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "搜索效果评估dcg 的理解",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音策略评估",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "你认为跨部门沟通的时候需要注重的点有哪些，最重要的是什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音策略评估",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "如果产品展示坑位有限，而各部门有不同的需求，如何平衡不同的需求最后如何展示，举例说明",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "C 端产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "比较想做哪个方向的产品经理，为什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "C 端产品经理",
+      "round": null,
+      "category": "认知和方法论问题",
+      "question": "如果让你负责C 端营收，你打算怎样做？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": null,
+      "question": "什么是用户体验？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": null,
+      "question": "介绍使用过的一个app",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": null,
+      "question": "设计一个类似的app，你会怎么做？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": null,
+      "round": null,
+      "category": null,
+      "question": "如何理解逻辑思维？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "认为产品经理最重要的是什么特质",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "数据分析从哪几个维度做的，数据来源，如何处理",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "简单讲一个印象里比较好的服务体验",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "为什么这个服务好",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "预计未来2-3 年抖音电商的发展",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "Axure、Xmind 的熟练程度？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "提到多个产品方案，是共同推进还是设定需求优先级？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "如何判断需求优先级？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "之前一直在做C 端，为什么想要做B 端产品？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "一面了解过岗位，如何看待业务？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "IOS 客户端产品经理",
+      "round": null,
+      "category": null,
+      "question": "对产品经理这个岗位的认知",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AMLAI 产品经理",
+      "round": null,
+      "category": null,
+      "question": "你觉得机器学习平台最重要的是什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AMLAI 产品经理",
+      "round": null,
+      "category": null,
+      "question": "你对于机器学习的算法开发方面有一些什么了解吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "地理位置中台-产品",
+      "round": null,
+      "category": null,
+      "question": "使用抖音，觉得抖音商城哪些页面可以进行优化，哪些点可以优化",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "地理位置中台-产品",
+      "round": null,
+      "category": null,
+      "question": "抖音的地理位置都有哪些应用",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "地理位置中台-产品",
+      "round": null,
+      "category": null,
+      "question": "如果你想确定一个人的职业以及年龄：通过抖音的哪些标签以及信息你可以确定",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "怎么衡量这个离开挽留弹窗的填写率？分子分母？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "如果之后优化，这个常态化反馈哪些点要优化？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "之后如果做发卡增长，怎么做？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "怎么去判断这个CPO 的数据量是否合理？高了还是低了？这个标准是多少？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "如果你是番茄小说的商业化负责人，怎么达到营收目标？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "比较想做哪个方向岗位？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "除了字节以外，最想去的互联网公司？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "ToB、ToC 的差异",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "企微、钉钉、飞书的差异",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "怎么看待“云钉一体”，你的看法",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "怎么看待云计算行业，它存在并快速发展的意义是什么，能为企业带来什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "你觉得现在云计算行业发展到什么阶段了，今后会向什么方向发展？ 对边缘计算的了解，应用在哪些方面，举例",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "淘宝是怎么盈利的，盈利主体是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "淘宝和天猫的差异？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "带领新团队进入红海市场应该考虑些什么因素，怎么打开局面，怎么决定产品方案，怎么制定商业化策略",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "怎么看待并分析字节决定进入红海市场并取得成功",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "若公司所处的赛道已有市场占有率较大的龙头企业，你要怎样带领团队抢占市场资源",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "云平台产品经理",
+      "round": null,
+      "category": null,
+      "question": "若你是该龙头企业的产品，该怎么防止此类企业抢占资源？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "对视频云有什么了解？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "对实时音视频有什么了解？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "技术层面了解吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "对视频云有了解吗？业内做的好的公司了解吗？用过视频云产品吗？感受是？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "比较一下字节、华为、和腾讯？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "说一下你怎么看待互联网的996？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "你怎么看待一家公司是否适合你?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "消费者调研评估如何选择目标消费者，如何确保选择的消费者与实际消费人群match？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "假设创业公司要退出这款产品，如何预估这款app 市场，DAU 和天花板？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "请你预估一下你的app 的市场",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "抖音电商和淘宝的区别",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "用户的购买决策在这两款app 上有什么不同",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "以酒旅的商品为例，如果想要构建商品侧的特征跟用户侧的特征，应该去设计哪些比较关键的维度，能够去做更好的匹配跟推荐？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "从知识迁移角度，结合你的实习，如果去做游戏行业的游戏推荐特征的设计，你觉得可能有哪些因素是能够去做好这件事情？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "如说一个策略相关的场景，抖音有几亿的活跃用户中，假设我们发现只有一小部分用户在抖音当中有游戏广告的曝光。你觉得针对这样的一个问题，你可能会从哪些方面去做一些下钻分析和优化动作？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "你对推荐系统的不同的子环节有了解吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "假设有些需求需要广告主去接入我们的API，但是他在接入的过程当中总会遇到各种各样的问题，比如说文档看不懂联调什么的，各种各样的问题，在这个过程当你觉得有哪些可以去做提效的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "增长产品",
+      "round": null,
+      "category": null,
+      "question": "从点击发布到正式发布中间的漏斗有多大？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "增长产品",
+      "round": null,
+      "category": null,
+      "question": "为什么dap 上涨%比wap 上涨%要高？这合理吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "增长产品",
+      "round": null,
+      "category": null,
+      "question": "商城如何进行拉新？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "增长产品",
+      "round": null,
+      "category": null,
+      "question": "电商直播为什么也有送礼物的按钮？作用是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "增长产品",
+      "round": null,
+      "category": null,
+      "question": "你对商城有哪些了解？可以如何优化？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "增长产品",
+      "round": null,
+      "category": null,
+      "question": "验组较测试组上涨+%具体数据口径是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "增长产品",
+      "round": null,
+      "category": null,
+      "question": "点击发布到正式发布中用户流失的原因是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "你平时用什么搜索平台，你觉得他们是什么样子的？给你什么感觉？请你评价下。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "你觉得怎么样是好的搜素？从用户的角度看",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "面对模糊搜素。你会怎么样给出内容",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "介绍下你对DCG 搜素的认识？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "如果用户搜了一个范词，我们怎么定位他背后真正的需求？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "如果这个用户是搜出了偏内容的结果。在前5 位的推荐中可以给商业化的结果吗？为什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化广告客户运营-商",
+      "round": null,
+      "category": null,
+      "question": "你知道效果广告和品牌广告的区别吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化广告客户运营-商",
+      "round": null,
+      "category": null,
+      "question": "活动投放的逻辑、KOL 如何甄选？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际电商运营",
+      "round": null,
+      "category": null,
+      "question": "一场美妆直播该怎么组品",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际电商运营",
+      "round": null,
+      "category": null,
+      "question": "一场直播后该从哪些角度分析数据",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际电商运营",
+      "round": null,
+      "category": null,
+      "question": "当直播的产品点击量远低于浏览量，会有哪些原因",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际电商运营",
+      "round": null,
+      "category": null,
+      "question": "如何提高直播中产品的点击量",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际电商运营",
+      "round": null,
+      "category": null,
+      "question": "TikTok 电商和海外其他电商的区别",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际电商运营",
+      "round": null,
+      "category": null,
+      "question": "sales 出身的主播直播销量不好会是什么原因",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "风控运营岗国际电商",
+      "round": null,
+      "category": null,
+      "question": "请你简单谈谈电商平台可能会遇到的风险。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "笛卡尔积是什么工作遇到sql 方面的问题怎么办?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "Sql 一个班级学生成绩，取出排名第三的学生名字?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "计算班级男女分别总数及平均分?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "SOLjoin 和innerjoin 区别，union 和unionall 区别，主键和外键区别",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "电商品类运营",
+      "round": null,
+      "category": null,
+      "question": "你以往的实习更偏向策划，但是电商不会涉及到策划，你怎么看待电商？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "电商品类运营",
+      "round": null,
+      "category": null,
+      "question": "如果你的同事需要你协作，但是ddl 很急，同时你手头上有同样很急的工作，这时候你会怎么处理？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "电商品类运营",
+      "round": null,
+      "category": null,
+      "question": "如果看数据，你需要着重看哪些数据呢？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "电商品类运营",
+      "round": null,
+      "category": null,
+      "question": "你认为雅诗兰黛的用户群体是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "电商品类运营",
+      "round": null,
+      "category": null,
+      "question": "对抖音美妆的了解？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "关于公众号运营怎么打造爆文。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "对于一篇推文如何进行选题。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "你觉得付费游戏与一般游戏有什么区别。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "你觉得怎么样的游戏比较吸引你。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "如果让你在TAPTAP 上面推广一个游戏，你会怎么做。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "如果让你进行游戏测评你会从那方面入手。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "如果一款游戏进行上新，你会怎么去策划当天的活动。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "如果进行一款游戏的推广，你会从那些方面入手。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "如果你是游戏厂商怎么查找KOL",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "直播产品运营",
+      "round": null,
+      "category": null,
+      "question": "Tiktok、Ins、Youtube、Facebook 的区别",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "直播产品运营",
+      "round": null,
+      "category": null,
+      "question": "Tiktok 直播活动应该需要注意什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "直播产品运营",
+      "round": null,
+      "category": null,
+      "question": "如果要你策划一场直播活动，需要注意哪些问题？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音MCN 运营",
+      "round": null,
+      "category": null,
+      "question": "商务BD 期间有什么痛点？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音MCN 运营",
+      "round": null,
+      "category": null,
+      "question": "处理BD 信息的手段有哪些？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音MCN 运营",
+      "round": null,
+      "category": null,
+      "question": "Cc 平台的商业模式是怎样的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音MCN 运营",
+      "round": null,
+      "category": null,
+      "question": "你对于机构是怎么理解的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音MCN 运营",
+      "round": null,
+      "category": null,
+      "question": "标准化的运作流程是指什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音MCN 运营",
+      "round": null,
+      "category": null,
+      "question": "你对生活服务这个业务了解吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化客户策略运营",
+      "round": null,
+      "category": null,
+      "question": "策略运营过程中，怎么和销售配合（和销售配合的方式）是阶段性持续负责某个广告主，还是单点接单、接完就end",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化客户策略运营",
+      "round": null,
+      "category": null,
+      "question": "同一时间大概接多少个策略case",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化客户策略运营",
+      "round": null,
+      "category": null,
+      "question": "在字节和达人/商家沟通时，怎么推进任务完成、目的达成",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化客户策略运营",
+      "round": null,
+      "category": null,
+      "question": "和销售沟通中，最大的冲突一般出现在哪些地方",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商运营",
+      "round": null,
+      "category": null,
+      "question": "对抖音电商的了解程度？在抖音上有过购物经历吗，存在什么问题？对于存在的问题应如何解决？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商运营",
+      "round": null,
+      "category": null,
+      "question": "直播间售卖假货应如何处理？若卖家发给主播的样品和发给客户的不一样，封禁主播直播间是否不公平？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商运营",
+      "round": null,
+      "category": null,
+      "question": "对岗位职责的认识？认为需要具备哪些能力？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "海外社区运营",
+      "round": null,
+      "category": null,
+      "question": "如果让你推广xxx，你会怎么做呢？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "有人在社群里吵起来还有人退群怎么办",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "怎么管理资源位的？怎么判定要上资源位的活动就比别的活动有价值？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "有用户遇到了BUG，你怎么做？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "你觉得客服和运营的区别？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "被叫停的项目你怎么让它继续推进下去的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "效果对指标贡献的占比？怎么证明做功是有效的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "是你提出来的专项还是只是接收任务来做这摊事？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "你在提专项的时候会注重哪几点？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "怎么证明该用户人群就是目标付费人群？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "你觉得为什么公司或者是大多数公司都在吸引年轻用户？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "让你对这个垂类的用户进行分类，你会分为哪些类型？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "这些用户的偏好与追求？怎么提高黏性和活跃？从其他角度还有没有可以去做的事情？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "会sql 吗？excel 用什么函数？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "介绍一个数据分析的case？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "怎么做的abtest？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "社群运营",
+      "round": null,
+      "category": null,
+      "question": "如果让你组织一场二次元漫展活动，分别以以上四种角度进行个活动的提报，规划",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "社群运营",
+      "round": null,
+      "category": null,
+      "question": "你认为社群运营最完美的程度是什么样的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "社群运营",
+      "round": null,
+      "category": null,
+      "question": "你怎么看待东方甄选的？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "社群运营",
+      "round": null,
+      "category": null,
+      "question": "你觉得东方甄选为什么能成功？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "社群运营",
+      "round": null,
+      "category": null,
+      "question": "你觉得抖音电商和其他的电商平台的区别？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "社群运营",
+      "round": null,
+      "category": null,
+      "question": "你怎么理解社群运营？社群运营为什么重要？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AIGC 产品经理",
+      "round": null,
+      "category": null,
+      "question": "平时有什么爱好呢？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化短视频产品经理",
+      "round": null,
+      "category": null,
+      "question": "回过头来看当时有什么做的不够好的地方",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化短视频产品经理",
+      "round": null,
+      "category": null,
+      "question": "对未来职业有什么想法吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化短视频产品经理",
+      "round": null,
+      "category": null,
+      "question": "过去是否有遇到比较大挫折吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化短视频产品经理",
+      "round": null,
+      "category": null,
+      "question": "个人平时使用什么内容视频平台比较多（抖音、ks、xhs、b 站等），为什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化短视频产品经理",
+      "round": null,
+      "category": null,
+      "question": "xhs 你使用中认为最大的功能改进，为什么这么做？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化短视频产品经理",
+      "round": null,
+      "category": null,
+      "question": "倾向于什么类型的产品（游戏，内容或其他）？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": null,
+      "question": "如果再来一遍，你会怎么做这个项目",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": null,
+      "question": "遇到的最大困难是什么，以及如何解决的",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": null,
+      "question": "平时玩抖音吗",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": null,
+      "question": "最喜欢的app 是什么",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "商业化产品经理",
+      "round": null,
+      "category": null,
+      "question": "为什么运营转产品",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "C 端产品经理",
+      "round": null,
+      "category": null,
+      "question": "你常用的app 是什么，评价一下",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "C 端产品经理",
+      "round": null,
+      "category": null,
+      "question": "平时用什么软件看书？看网文多吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "C 端产品经理",
+      "round": null,
+      "category": null,
+      "question": "比较想做哪个方向的产品经理，为什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "举例一个熟悉的社交产品",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "微信的延展讨论",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "为什么要做产品经理？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "介绍使用过的一个app",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品面经",
+      "round": null,
+      "category": null,
+      "question": "平时用什么软件浏览信息多",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品面经",
+      "round": null,
+      "category": null,
+      "question": "平时用什么平台网购，这几个平台的区别",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品面经",
+      "round": null,
+      "category": null,
+      "question": "认为产品经理最重要的是什么特质",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品面经",
+      "round": null,
+      "category": null,
+      "question": "简单讲一个印象里比较好的服务体验",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品面经",
+      "round": null,
+      "category": null,
+      "question": "为什么这个服务好",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "做过哪些产品功能的设计，Axure、Xmind 的熟练程度？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "有没有学过财务会计相关专业知识？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "你觉得产品经理需要哪些能力？你在哪些方面还比较欠缺？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "之前一直在做C 端，为什么想要做B 端产品？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "财务系统2B 产品经理",
+      "round": null,
+      "category": null,
+      "question": "在工作中想要收获什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "IOS 客户端产品经理",
+      "round": null,
+      "category": null,
+      "question": "你觉得自己擅长的点在哪里？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "IOS 客户端产品经理",
+      "round": null,
+      "category": null,
+      "question": "你刚刚提到的你在实习这边有给自己设定学习的目标，这个学习的目标是什么呢",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AMLAI 产品经理",
+      "round": null,
+      "category": null,
+      "question": "在我看来产品经理是什么样的，我为什么想做",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "AMLAI 产品经理",
+      "round": null,
+      "category": null,
+      "question": "最喜欢的产品是什么，为什么，产品做得成功的原因，有哪些吸引我的点，还值得改进的地方。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "地理位置中台-产品",
+      "round": null,
+      "category": null,
+      "question": "使用抖音，觉得抖音商城哪些页面可以进行优化，哪些点可以优化",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "对番茄小说有了解吗？看网文吗？用什么软件？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "比较想做哪个方向岗位？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "番茄小说-用户产品经理",
+      "round": null,
+      "category": null,
+      "question": "除了字节以外，最想去的互联网公司？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "什么事情会让你有成就感？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "为什么想做PM?你的专业有什么优劣势？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "你的ld 怎么评价你？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "结果是？这次项目的复盘？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "前两次面试官对你的评价不错，你有什么感受？为什么想来字节？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "音视频产品",
+      "round": null,
+      "category": null,
+      "question": "你怎么看待一家公司是否适合你?入职以后的规划？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "抖音电商产品",
+      "round": null,
+      "category": null,
+      "question": "如何证明你的协调能力？过去有什么协调的难点，如何解决？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "你在过往的哪一段实习中成长最快？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "面对一个新行业，比如酒旅、游戏行业，你认为可以从哪些方面去快速学习？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏业务线产品",
+      "round": null,
+      "category": null,
+      "question": "你自己平常玩游戏的经历多吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "在竞品分析中，你得出最有价值的结论是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "这个竞品分析中，你觉得那个是可以借鉴的点或是市场上的机会点？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "最近看的一本书是什么，你觉得这本书对你最大的收获是什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "策略运营",
+      "round": null,
+      "category": null,
+      "question": "你在做这个项目中，有什么是你觉得可以复用的地方。有什么是踩坑的地方。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化广告客户运营-商业化",
+      "round": null,
+      "category": null,
+      "question": "你常用的app 有什么？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化广告客户运营-商业化",
+      "round": null,
+      "category": null,
+      "question": "app 中，你会怎么按行业划分？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际化广告客户运营-商业化",
+      "round": null,
+      "category": null,
+      "question": "你未来的职业规划是什么？对广告感兴趣吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "国际电商运营",
+      "round": null,
+      "category": null,
+      "question": "分享一个你最喜欢的抖音电商",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "风控运营岗国际电商",
+      "round": null,
+      "category": null,
+      "question": "有没有哪位师兄或师姐给你带来很大的影响？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "风控运营岗国际电商",
+      "round": null,
+      "category": null,
+      "question": "你有没有给哪些同学起到影响作用或者示范作用？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "风控运营岗国际电商",
+      "round": null,
+      "category": null,
+      "question": "最近有什么让你觉得很困难的事情吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "风控运营岗国际电商",
+      "round": null,
+      "category": null,
+      "question": "最近有什么让你觉得很成功的事情吗？",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "如果你数据分析出问题所在，但另一个业务运营的同事不认可，你怎么办?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "如果领导交给你很困难你不了解的任务该怎么办?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "你认为这个岗位需要什么特质?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "如果进入公司，适应期是多久?规划是什么?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "数据运营",
+      "round": null,
+      "category": null,
+      "question": "进入公司后发现工作内容很繁琐简单没有自己期待的挑战和创造性，怎么办?",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "对运营岗位的了解，你所认为的游戏运营是做些什么的。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "你玩过哪些游戏，了解过哪些类型的游戏。",
+      "source": "pdf"
+    },
+    {
+      "company": "字节跳动",
+      "role": "游戏平台运营",
+      "round": null,
+      "category": null,
+      "question": "平时通过哪些平台进行游戏的查找。",
+      "source": "pdf"
+    }
+  ]
+}

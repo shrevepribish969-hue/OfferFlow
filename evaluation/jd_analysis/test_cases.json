@@ -1,0 +1,23 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Standard AI Product Manager",
+    "input": {
+      "jd_raw_text": "职位：AI产品经理\n岗位职责：\n1. 负责AI产品规划与需求分析；\n2. 推动大模型产品设计及功能迭代；\n3. 协调研发、算法和设计团队完成产品落地；\n4. 跟踪行业动态并制定产品策略。\n岗位要求：\n1. 本科及以上学历；\n2. 2年以上互联网产品经验；\n3. 熟悉Prompt Engineering、大模型应用；\n4. 熟悉Axure、Figma等产品设计工具；\n5. 沟通能力强，逻辑清晰。"
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "High Noise with Benefits",
+    "input": {
+      "jd_raw_text": "【公司介绍】我们成立于2012年……【福利】免费健身房、下午茶、团建、弹性打卡、年度旅游……【岗位职责】负责AI产品设计；负责Prompt设计；负责Workflow；负责需求分析。【岗位要求】本科；3年以上；LLM；Python；沟通能力。"
+    }
+  },
+  {
+    "case_id": "case_3",
+    "description": "Conversational Garbage",
+    "input": {
+      "jd_raw_text": "你好。你是谁？帮我写代码。今天上海天气怎么样？"
+    }
+  }
+]

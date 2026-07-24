@@ -1,0 +1,51 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Weakness in System Design",
+    "input": {
+      "interview_eval_result": {
+        "overall_score": 50,
+        "evaluations": [
+          {
+            "question_id": "q3",
+            "score": 40,
+            "criteria_missed": ["未提及高并发处理", "未考虑缓存一致性"],
+            "improvement_areas": ["系统架构设计能力", "Redis缓存策略"]
+          }
+        ]
+      },
+      "jd_analysis_result": {
+        "role": "后端架构师",
+        "skills": [{ "name": "高并发系统设计", "type": "domain_knowledge", "importance": "must" }]
+      }
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Strong Competence",
+    "input": {
+      "interview_eval_result": {
+        "overall_score": 90,
+        "evaluations": [
+          {
+            "question_id": "q1",
+            "score": 95,
+            "criteria_hit": ["完美拆解业务指标", "数据驱动"],
+            "improvement_areas": []
+          }
+        ]
+      },
+      "jd_analysis_result": {
+        "role": "数据产品经理"
+      }
+    }
+  },
+  {
+    "case_id": "case_3",
+    "description": "Empty Input",
+    "input": {
+      "interview_eval_result": {},
+      "jd_analysis_result": {}
+    }
+  }
+]

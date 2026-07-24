@@ -1,0 +1,30 @@
+[
+  {
+    "case_id": "case_1",
+    "expected_output": {
+      "exact_match": {},
+      "semantic_match": {
+        "generated_content": ["Prompt"]
+      },
+      "tool_calls": [
+        {
+          "action": "Create_Communication_Record",
+          "parameters": {
+            "job_case_id": "string",
+            "communication_type": "Email",
+            "generated_content": "string"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "case_id": "case_2",
+    "expected_output": {
+      "exact_match": {
+        "status": "error",
+        "error_code": "INVALID_INTENT"
+      }
+    }
+  }
+]

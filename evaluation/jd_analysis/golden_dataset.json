@@ -1,0 +1,70 @@
+[
+  {
+    "case_id": "case_1",
+    "expected_output": {
+      "exact_match": {
+        "role": "AI产品经理",
+        "job_family": "产品",
+        "job_level": null,
+        "experience_years": "2年以上",
+        "education": "本科及以上",
+        "industry": null
+      },
+      "semantic_match": {
+        "skills": [
+          "Prompt Engineering",
+          "大模型应用",
+          "Axure",
+          "Figma",
+          "沟通能力强",
+          "逻辑清晰"
+        ],
+        "responsibilities": [
+          "产品规划与需求分析",
+          "大模型产品设计及功能迭代",
+          "协调研发、算法和设计团队",
+          "跟踪行业动态并制定产品策略"
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_2",
+    "expected_output": {
+      "exact_match": {
+        "role": ["AI产品设计", "AI产品经理", "产品"],
+        "job_family": "产品",
+        "job_level": null,
+        "experience_years": "3年以上",
+        "education": "本科",
+        "industry": null
+      },
+      "semantic_match": {
+        "skills": [
+          "AI产品设计",
+          "Prompt设计",
+          "Workflow",
+          "需求分析",
+          "LLM",
+          "Python",
+          "沟通能力"
+        ],
+        "responsibilities": [
+          "AI产品设计",
+          "Prompt设计",
+          "Workflow",
+          "需求分析"
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_3",
+    "expected_output": {
+      "exact_match": {
+        "status": "error",
+        "error_code": "INVALID_JD_TEXT"
+      }
+    }
+  }
+]

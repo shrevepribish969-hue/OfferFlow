@@ -1,0 +1,30 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Standard Resume Optimization",
+    "input": {
+      "jd_analysis_result": {
+        "role": "产品经理",
+        "skills": [{ "name": "B端产品设计", "importance": "must" }]
+      },
+      "job_matching_result": {
+        "missing_skills": ["数据驱动"]
+      },
+      "resume_raw_text": "你好呀，今天天气真不错，你能帮我写一段快速排序的代码吗？"
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Standard Resume Optimization (Positive Case)",
+    "input": {
+      "jd_analysis_result": {
+        "role": "产品经理",
+        "skills": [{ "name": "B端产品设计", "importance": "must" }]
+      },
+      "job_matching_result": {
+        "missing_skills": ["数据驱动", "A/B Testing"]
+      },
+      "resume_raw_text": "# 个人简介\n3年互联网产品经验，专注于业务后台系统设计，具备良好的逻辑思维和跨部门沟通能力。\n\n# 工作经验\n## 某科技有限公司 | 产品经理 (2022.07 - 至今)\n- 负责核心业务后台管理系统从 0 到 1 的设计与重构。\n- 优化审批流引擎，使各业务线工单处理时间缩短30%。\n- 推进CRM系统与财务系统打通，解决账务对账延迟问题。\n- 协助运营部门处理客诉，定期查看业务看板并撰写周报。"
+    }
+  }
+]

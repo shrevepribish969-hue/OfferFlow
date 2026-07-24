@@ -1,0 +1,6 @@
+﻿@echo off
+echo Starting FastAPI Backend...
+start cmd /k "python -m uvicorn runtime.api.api_server:app --reload --port 8000"
+echo Starting Next.js Frontend...
+start cmd /k "cd frontend && npm run dev"
+echo Both services are starting in separate windows!

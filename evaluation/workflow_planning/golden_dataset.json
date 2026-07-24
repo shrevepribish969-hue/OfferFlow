@@ -1,0 +1,36 @@
+[
+  {
+    "case_id": "case_1",
+    "expected_output": {
+      "exact_match": {},
+      "semantic_match": {
+        "tool_calls": [
+          "Mock Interview",
+          "Research Company",
+          "Prepare Self-Intro"
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_2",
+    "expected_output": {
+      "exact_match": {},
+      "semantic_match": {
+        "tool_calls": [
+          "Post-mortem Reflection",
+          "Archive Job"
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_3",
+    "expected_output": {
+      "exact_match": {
+        "status": "error",
+        "error_code": "UNKNOWN_STATUS"
+      }
+    }
+  }
+]

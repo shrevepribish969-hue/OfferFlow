@@ -1,0 +1,55 @@
+[
+  {
+    "case_id": "case_1",
+    "expected_output": {
+      "exact_match": {
+        "candidate_name": "张三",
+        "highest_education": "本科",
+        "total_experience_years": "4年",
+        "current_company": "腾讯科技（深圳）有限公司 - 微信事业群",
+        "current_title": "高级AI产品经理"
+      },
+      "semantic_match": {
+        "skills": [
+          "Axure",
+          "Figma",
+          "Python",
+          "Prompt调优",
+          "RAG系统",
+          "沟通能力",
+          "跨部门协作"
+        ],
+        "project_experiences": [
+          "微信对话AI助手",
+          "智能客服机器人重构",
+          "准确率提升"
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_2",
+    "expected_output": {
+      "exact_match": {
+        "candidate_name": "李四",
+        "highest_education": null,
+        "total_experience_years": null,
+        "current_company": null,
+        "current_title": null
+      },
+      "semantic_match": {
+        "skills": ["React", "Vue"],
+        "project_experiences": []
+      }
+    }
+  },
+  {
+    "case_id": "case_3",
+    "expected_output": {
+      "exact_match": {
+        "status": "error",
+        "error_code": "INVALID_RESUME_TEXT"
+      }
+    }
+  }
+]

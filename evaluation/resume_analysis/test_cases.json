@@ -1,0 +1,23 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Standard Product Manager Resume",
+    "input": {
+      "resume_raw_text": "张三\n手机：13800138000\n邮箱：zhangsan@example.com\n\n教育背景：\n清华大学 计算机科学与技术 本科 (2018-2022)\n\n工作经历：\n腾讯科技（深圳）有限公司 - 微信事业群 (2022.07 - 至今)\n高级AI产品经理\n- 负责微信对话AI助手的产品规划与落地。\n- 熟练使用Axure、Figma输出原型，撰写PRD。\n- 掌握Python进行基础数据处理，熟悉LLM Prompt调优。\n\n项目经历：\n智能客服机器人重构 (2023.01 - 2023.06)\n- 将系统准确率提升至95%，沉淀了RAG系统的设计方法论。\n\n个人优势：\n沟通能力强，具备跨部门协作能力。"
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Empty/Incomplete Resume",
+    "input": {
+      "resume_raw_text": "姓名：李四\n电话：13912345678\n求职意向：前端开发\n我很喜欢编程，平时自学了React和Vue，希望能得到一个面试机会，谢谢！"
+    }
+  },
+  {
+    "case_id": "case_3",
+    "description": "Conversational Garbage",
+    "input": {
+      "resume_raw_text": "帮我看看我的简历能不能过腾讯的初筛？"
+    }
+  }
+]

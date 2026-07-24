@@ -1,0 +1,48 @@
+[
+  {
+    "case_id": "case_1",
+    "expected_output": {
+      "exact_match": {
+        "matching_score": [90, 95, 100],
+        "is_recommended": true
+      },
+      "semantic_match": {
+        "matched_skills": ["Prompt Engineering", "大模型应用"],
+        "missing_skills": [],
+        "risk_factors": []
+      },
+      "tool_calls": [
+        {
+          "action": "Save_Job_Matching_Result",
+          "parameters": {
+            "job_case_id": "string",
+            "matching_result": { "matching_score": 95, "is_recommended": true }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "case_id": "case_2",
+    "expected_output": {
+      "exact_match": {
+        "matching_score": [0, 10, 20],
+        "is_recommended": false
+      },
+      "semantic_match": {
+        "matched_skills": [],
+        "missing_skills": ["Java", "Spring Boot"],
+        "risk_factors": ["学历不达标 (要求硕士，实际本科)", "经验不足 (要求5年，实际1年)", "跨行业/岗位完全不匹配"]
+      },
+      "tool_calls": [
+        {
+          "action": "Save_Job_Matching_Result",
+          "parameters": {
+            "job_case_id": "string",
+            "matching_result": { "matching_score": 10, "is_recommended": false }
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Perfect Match",
+    "input": {
+      "jd_analysis_result": {
+        "role": "AI产品经理",
+        "job_family": "产品",
+        "experience_years": "2年以上",
+        "education": "本科及以上",
+        "skills": [
+          { "name": "Prompt Engineering", "type": "hard_skill", "importance": "must" },
+          { "name": "大模型应用", "type": "hard_skill", "importance": "must" }
+        ]
+      },
+      "resume_analysis_result": {
+        "candidate_name": "张三",
+        "highest_education": "本科",
+        "total_experience_years": "3年",
+        "skills": [
+          { "name": "LLM Prompt调优", "type": "hard_skill" },
+          { "name": "大模型落地", "type": "hard_skill" }
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Complete Mismatch",
+    "input": {
+      "jd_analysis_result": {
+        "role": "Java后端工程师",
+        "job_family": "研发",
+        "experience_years": "5年以上",
+        "education": "硕士",
+        "skills": [
+          { "name": "Java", "type": "hard_skill", "importance": "must" },
+          { "name": "Spring Boot", "type": "hard_skill", "importance": "must" }
+        ]
+      },
+      "resume_analysis_result": {
+        "candidate_name": "李四",
+        "highest_education": "本科",
+        "total_experience_years": "1年",
+        "skills": [
+          { "name": "Figma", "type": "tool" },
+          { "name": "运营策划", "type": "hard_skill" }
+        ]
+      }
+    }
+  }
+]

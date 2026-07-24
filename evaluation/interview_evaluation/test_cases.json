@@ -1,0 +1,60 @@
+[
+  {
+    "case_id": "case_1",
+    "description": "Excellent STAR Answer",
+    "input": {
+      "interview_prep_result": {
+        "mock_questions": [
+          {
+            "question_id": "q1",
+            "question_text": "在智能客服重构中，你如何决定使用RAG架构？",
+            "good_answer_criteria": ["提及原有痛点(幻觉)", "对比微调方案的成本", "提到向量数据库的选择"]
+          }
+        ]
+      },
+      "user_answers": [
+        {
+          "question_id": "q1",
+          "user_response_transcript": "当时我们的痛点是旧系统幻觉严重，用户投诉多（Situation）。我对比了模型微调和RAG，发现微调成本太高且数据更新慢（Task）。所以我决定采用RAG方案，并引入Milvus作为向量数据库，配合LangChain做文档切分（Action）。最终准确率提升到了95%（Result）。"
+        }
+      ]
+    }
+  },
+  {
+    "case_id": "case_2",
+    "description": "Rambling/Poor Answer",
+    "input": {
+      "interview_prep_result": {
+        "mock_questions": [
+          {
+            "question_id": "q2",
+            "question_text": "你遇到过最大的跨部门沟通困难是什么？",
+            "good_answer_criteria": ["说明冲突背景", "说明解决手段(同理心/数据说服)", "最终达成的共识"]
+          }
+        ]
+      },
+      "user_answers": [
+        {
+          "question_id": "q2",
+          "user_response_transcript": "沟通挺难的，开发老说做不了。我就天天请他们喝奶茶，然后找老板压他们，最后他们就做了。"
+        }
+      ]
+    }
+  },
+  {
+    "case_id": "case_3",
+    "description": "Empty Answers Input",
+    "input": {
+      "interview_prep_result": {
+        "mock_questions": [
+          {
+            "question_id": "q3",
+            "question_text": "你能谈谈你的缺点吗？",
+            "good_answer_criteria": ["真诚", "说明改进措施"]
+          }
+        ]
+      },
+      "user_answers": []
+    }
+  }
+]

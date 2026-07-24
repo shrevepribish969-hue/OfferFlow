@@ -1,0 +1,33 @@
+[
+  {
+    "case_id": "case_1",
+    "expected_output": {
+      "exact_match": {},
+      "semantic_match": {
+        "tool_calls": [
+          "Interview_Scheduled"
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_2",
+    "expected_output": {
+      "exact_match": {},
+      "semantic_match": {
+        "tool_calls": [
+          "Rejected"
+        ]
+      }
+    }
+  },
+  {
+    "case_id": "case_3",
+    "expected_output": {
+      "exact_match": {
+        "status": "error",
+        "error_code": "NO_STATE_CHANGE"
+      }
+    }
+  }
+]
