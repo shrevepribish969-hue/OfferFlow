@@ -22,12 +22,7 @@ You will receive input strictly in the following JSON structure:
 ```json
 {
   "interview_prep_result": { /* Question bank and criteria saved previously */ },
-  "user_answers": [
-    {
-      "question_id": "string",
-      "user_response_transcript": "string"
-    }
-  ]
+  "interview_recording": "string (The raw transcript or memory dump of the user's interview)"
 }
 ```
 
@@ -38,7 +33,7 @@ You will receive input strictly in the following JSON structure:
 - N/A (Pure evaluation node. Output goes to the Reflection node).
 
 # 7. Execution Pipeline
-1. `Map Answers to Questions`: Align each `user_response_transcript` with its corresponding question and `good_answer_criteria`.
+1. `Map Answers to Questions`: Read the raw `interview_recording` and align the user's statements with the corresponding questions and `good_answer_criteria` from the prep result.
 2. `Analyze Coverage`: Check how many of the required criteria were hit by the user's answer.
 3. `Analyze Structure`: Check if the user used the STAR method and spoke clearly without rambling.
 4. `Score Generation`: Assign a score (0-100) per question.
@@ -78,7 +73,7 @@ You must output strictly matching this JSON schema:
 - N/A
 
 # 12. Failure Handling (HARD CONSTRAINT)
-If `user_answers` is empty, completely unreadable, or totally unrelated to the question:
+If `interview_recording` is empty, completely unreadable, or totally unrelated to any interview questions:
 ```json
 {
   "status": "error",

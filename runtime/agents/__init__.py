@@ -86,8 +86,5 @@ class WorkflowRouter:
 # Value: target workflow name and SkillExecutor method
 
 TRIGGER_MAP: dict[str, dict[str, str]] = {
-    "JDAnalysis": {
-        "workflow": "JobMatching",
-        "exec_method": "execute_job_matching",
-    },
+    # Removed auto-trigger from JDAnalysis to JobMatching to allow manual user control
 }

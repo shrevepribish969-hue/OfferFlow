@@ -175,7 +175,7 @@ class SkillExecutor:
         return SkillExecutor._format_success('resume_optimization', '1.0', result)
 
     @staticmethod
-    async def execute_interview_prep(job: models.JobCase, db_session, user_input: str = "") -> dict:
+    async def execute_interview_prep(job: models.JobCase, db_session, user_input: str = "", round_id: str = None) -> dict:
         w_data = job.workflow_data or {}
         jd_result = w_data.get("jd_analysis_result", {})
         
@@ -257,8 +257,12 @@ class SkillExecutor:
         profile = db_session.query(models.UserProfile).filter(models.UserProfile.id == user_id).first()
         weakness_memory = profile.user_memory.get("weaknesses", []) if profile and profile.user_memory else []
 
+        round_map = {"1": "一面", "2": "二面", "hr": "HR面"}
+        round_label = round_map.get(str(round_id).lower(), "一面")
+
         user_payload = {
             "interview_context": {
+                "round_label": round_label,
                 "user_input": user_input,
                 "jd_analysis_result": jd_result,
                 "top_questions_with_stories": formatted_questions,
@@ -377,7 +381,7 @@ class SkillExecutor:
         return SkillExecutor._format_success('job_matching', '1.0', result)
 
     @staticmethod
-    async def execute_content_generation(job: models.JobCase, db_session) -> dict:
+    async def execute_content_generation(job: models.JobCase, db_session, accepted_indices: list = None) -> dict:
         w_data = job.workflow_data or {}
         
         # 1. Load the original base resume
@@ -392,7 +396,15 @@ class SkillExecutor:
             resume_json = {}
             
         patches = w_data.get("optimization_patches", [])
-        if patches and isinstance(resume_json, dict):
+        
+        # Filter patches based on user selection (default to rejecting all unaccepted)
+        if accepted_indices is not None:
+            filtered_patches = [patches[i] for i in range(len(patches)) if i in accepted_indices]
+        else:
+            # Fallback to no patches if the list wasn't provided but generation was triggered
+            filtered_patches = []
+            
+        if filtered_patches and isinstance(resume_json, dict):
             def apply_patches_to_dict(d, patch_list):
                 if isinstance(d, dict):
                     for k, v in d.items():
@@ -415,8 +427,9 @@ class SkillExecutor:
                                     d[i] = d[i].replace(orig, sugg)
                         else:
                             apply_patches_to_dict(d[i], patch_list)
+                            apply_patches_to_dict(d[i], patch_list)
                             
-            apply_patches_to_dict(resume_json, patches)
+            apply_patches_to_dict(resume_json, filtered_patches)
             
         result = {
             "content_generation_result": {

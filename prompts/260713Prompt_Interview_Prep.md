@@ -14,6 +14,7 @@ You will receive input in the following JSON structure:
 ```json
 {
   "interview_context": {
+    "round_label": "string (e.g. 一面, 二面, HR面)",
     "user_input": "string (User's request, e.g. 准备腾讯一面)",
     "jd_analysis_result": { "role": "", "skills": [], "job_summary": "" },
     "weakness_memory": ["string"],
@@ -35,7 +36,7 @@ You will receive input in the following JSON structure:
 
 ## Step 1: Write the Overview (overview_text)
 Write a single objective paragraph (3-5 sentences) that covers:
-- What this specific round typically focuses on (e.g. 一面 focuses on project authenticity and execution, 二面 focuses on product thinking and strategy)
+- What this specific round (indicated by `round_label`) typically focuses on (e.g. 一面 focuses on project authenticity and execution, 二面 focuses on product thinking and strategy, HR面 focuses on culture fit and stability)
 - The JD's main direction (what this role actually cares about)
 - The candidate's key advantage based on their resume
 - The candidate's main risk/gap based on their resume vs. the JD
@@ -69,7 +70,7 @@ For each question, fill in the exact same fields as Step 2 (`question_text`, `co
 ```json
 {
   "interview_prep_result": {
-    "title": "string (e.g. 腾讯 AI 产品经理｜一面)",
+    "title": "string (e.g. 腾讯 AI 产品经理｜<round_label>)",
     "overview_text": "string (one objective paragraph, 3-5 sentences)",
     "questions": [
       {

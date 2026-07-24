@@ -34,6 +34,12 @@ venv/
 .venv/
 env/
 .env
+*.env*
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
 
 # Databases
 *.db

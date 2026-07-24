@@ -122,6 +122,39 @@ def get_profile(db: Session = Depends(get_db)):
         db.refresh(profile)
     return {"base_resume": profile.base_resume}
 
+class ApplyUpdate(BaseModel):
+    applied: bool
+    link: str = ""
+    apply_time: str = ""
+    reminder_time: str = ""
+
+@app.put("/api/jobs/{job_id}/apply")
+def update_apply(job_id: int, data: ApplyUpdate, db: Session = Depends(get_db)):
+    job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+    if not job: raise HTTPException(404)
+    w_data = dict(job.workflow_data) if job.workflow_data else {}
+    w_data["apply_status"] = data.model_dump() if hasattr(data, 'model_dump') else data.dict()
+    job.workflow_data = w_data
+    if data.applied:
+        job.status = "已投递"
+    db.commit()
+    return {"status": "success"}
+
+class OfferUpdate(BaseModel):
+    result: str
+    thoughts: str = ""
+
+@app.put("/api/jobs/{job_id}/offer")
+def update_offer(job_id: int, data: OfferUpdate, db: Session = Depends(get_db)):
+    job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+    if not job: raise HTTPException(404)
+    w_data = dict(job.workflow_data) if job.workflow_data else {}
+    w_data["offer_status"] = data.model_dump() if hasattr(data, 'model_dump') else data.dict()
+    job.workflow_data = w_data
+    job.status = data.result
+    db.commit()
+    return {"status": "success"}
+
 async def parse_resume_to_json(raw_text: str) -> str:
     from openai import AsyncOpenAI
     client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
@@ -322,6 +355,7 @@ class ChatRequest(BaseModel):
     message: str
     is_system_trigger: bool = False
     system_workflow: Optional[str] = None
+    round_id: Optional[str] = None
 
 
 @app.get("/api/jobs/{job_id}/resume_versions")
@@ -600,25 +634,21 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         elif workflow == "InterviewPrep":
             main_title = "Preparing interview..."
             yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['Analyzing requirements', 'Preparing stories', 'Structuring answers', 'Mock interview'], 'logs': [brain_log, 'Skill: Loaded InterviewPrep', 'Executing Real LLM Call...']}})}\n\n"
+            await asyncio.sleep(0.5)
             
             from .workflow_engine import SkillExecutor
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
-                result = await SkillExecutor.execute_interview_prep(job, db, req.message)
+                result = await SkillExecutor.execute_interview_prep(job, db, req.message, round_id=req.round_id)
                 if "error" not in result:
-                    job.status = "Offer received!"
-                db.commit()
-                
-                if "error" in result:
+                    job.status = "面试中"
+                    db.commit()
+                    prep_res = result.get("result", {}).get("interview_prep_result", {})
+                    card_content = "面试预测题已生成完毕"
+                    card_data = {"preview": json.dumps(prep_res, ensure_ascii=False), "file_name": "interview_prep.json", "progress": 100, "sidebar_summary": "Generation summary", "round_id": req.round_id}
+                else:
                     card_content = f"Offer stage error: {result['error']}"
                     card_data = {}
-                else:
-                    prep_res = result.get("result", {}).get("interview_prep_result", {})
-                    # extract questions for the frontend
-                    # We might need to safely parse the question bank depending on its structure.
-                    # As a fallback, we can just stringify it.
-                    card_content = "Optimization review completed."
-                    card_data = {"preview": json.dumps(prep_res, ensure_ascii=False, indent=2)[:500] + "...", "file_name": "interview_prep.json", "progress": 100, "sidebar_summary": "Generation summary"}
             else:
                 card_content = "Task completed."
                 card_data = {}
@@ -629,25 +659,27 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         elif workflow == "InterviewEvaluation":
             main_title = "Evaluating interview results..."
             yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['Evaluating answers', 'Scoring competencies', 'Reflection'], 'logs': [brain_log, 'Skill: Loaded InterviewEvaluation', 'Executing Real LLM Call...']}})}\n\n"
+            await asyncio.sleep(0.5)
             
             from .workflow_engine import SkillExecutor
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
                 # 1. Evaluate Interview
-                eval_result = await SkillExecutor.execute_interview_eval(job, req.message, db)
+                eval_result = await SkillExecutor.execute_interview_eval(job, req.message, db, round_id=req.round_id)
                 db.commit()
                 
-                if "error" in eval_result:
-                    card_content = f"Error: {eval_result['error']}"
+                if "error" in eval_result or eval_result.get("status") == "error":
+                    error_msg = eval_result.get("error") or eval_result.get("message") or "Unknown evaluation error"
+                    card_content = f"Error: {error_msg}"
                     card_data = {}
                 else:
                     # 2. Reflect and Update Memory
                     ref_result = await SkillExecutor.execute_reflection(job, db)
                     db.commit()
                     
-                    eval_res = eval_result.get("interview_evaluation_result", {})
-                    card_content = "Processing completed."
-                    card_data = {"preview": json.dumps(eval_res, ensure_ascii=False, indent=2)[:500] + "...", "file_name": "evaluation.json", "progress": 100, "sidebar_summary": "Generation summary"}
+                    eval_res = eval_result.get("result", {}).get("interview_evaluation_result", {})
+                    card_content = "面试评估及复盘已完成"
+                    card_data = {"preview": json.dumps(eval_res, ensure_ascii=False), "file_name": "evaluation.json", "progress": 100, "sidebar_summary": "Generation summary", "round_id": req.round_id}
             else:
                 card_content = "Task completed."
                 card_data = {}
@@ -658,12 +690,12 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         elif workflow == "JobMatching":
             main_title = "Matching job requirements..."
             yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['Analyzing JD', 'Matching resume', 'Calculating score'], 'logs': [brain_log, 'Skill: Loaded JobMatching', 'Executing Real LLM Call...']}})}\n\n"
+            await asyncio.sleep(0.5)
             
             from .workflow_engine import SkillExecutor
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
                 result = await SkillExecutor.execute_job_matching(job, db)
-                db.commit()
                 
                 if "error" in result:
                     card_content = f"Error: {result['error']}"
@@ -684,29 +716,28 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                     must_str = "、".join(must) if must else "无"
                     missing_str = "、".join(missing) if missing else "无"
                     
-                    card_content = (
-                        f"**匹配度分析完成**\n\n"
-                        f"综合匹配度：**{score}分** ({summary})\n\n"
-                        f"- **学历匹配**：{'是' if match_res.get('education_match') else '否'} ({score_breakdown.get('education', 0)}/10)\n"
-                        f"- **经验匹配**：{'是' if match_res.get('experience_match') else '否'} ({score_breakdown.get('experience', 0)}/20)\n"
-                        f"- **核心技能匹配**：{must_str} ({score_breakdown.get('must_skills', 0)}/40)\n"
-                        f"- **缺失技能**：{missing_str}\n\n"
-                        f"**AI 评估**：{reason}"
-                    )
-                    
-                    details = []
+                    # Persist the match score
+                    if isinstance(score, (int, float)):
+                        job.match_score = int(score)
+                        db.commit()
+
+                    card_content = "匹配度分析完成"
                     
                     card_data = {
-                        "preview": json.dumps(match_res, ensure_ascii=False, indent=2)[:500] + "...", 
                         "progress": 100, 
                         "sidebar_summary": f"Score: {score}% | Matched: {len(must)} | Missing: {len(missing)}",
-                        "details": details
+                        "match_data": {
+                            "score": score,
+                            "matching_skills": must,
+                            "gap_skills": missing,
+                            "reason": reason
+                        }
                     }
             else:
                 card_content = "Task completed."
                 card_data = {}
                 
-            card_type = "ExecutionSummary"
+            card_type = "MatchAnalysis"
             steps = []
             dev_logs = []
         elif workflow == "JDAnalysis":
@@ -749,11 +780,19 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         elif workflow == "ContentGeneration":
             main_title = "Generating application content..."
             yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['Analyzing context', 'Drafting content', 'Reviewing', 'Finalizing'], 'logs': [brain_log, 'Skill: Loaded ContentGeneration', 'Rendering local template...']}})}\n\n"
+            await asyncio.sleep(0.5)
             
             from .workflow_engine import SkillExecutor
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
-                result = await SkillExecutor.execute_content_generation(job, db)
+                accepted_indices = None
+                try:
+                    msg_data = json.loads(chat_message.message)
+                    if isinstance(msg_data, dict) and "accepted_indices" in msg_data:
+                        accepted_indices = msg_data["accepted_indices"]
+                except Exception:
+                    pass
+                result = await SkillExecutor.execute_content_generation(job, db, accepted_indices)
                 db.commit()
                 
                 if "error" in result:
@@ -772,13 +811,13 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             else:
                 card_content = "Task completed."
                 card_data = {}
-                
-            card_type = "ExecutionSummary"
+            card_type = "ContentGeneration"
             steps = []
             dev_logs = []
         elif workflow == "GreetingGeneration":
             main_title = "Generating greeting for Boss..."
             yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['Analyzing recipient', 'Preparing JD', 'Drafting', 'Finalizing'], 'logs': [brain_log, 'Skill: Loaded GreetingGeneration', 'Generating greeting text...']}})}\n\n"
+            await asyncio.sleep(0.5)
             
             from .workflow_engine import SkillExecutor
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
@@ -806,7 +845,7 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                 card_content = "Task completed."
                 card_data = {}
                 
-            card_type = "ExecutionSummary"
+            card_type = "GreetingGeneration"
             steps = []
             dev_logs = []
         elif workflow == "UpdateJobCase":
@@ -849,7 +888,7 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         # Phase 8: Attach agent metadata
         card_data["agent"] = agent_name
         card = {
-            "type": "text" if workflow in ["JDAnalysis", "JobMatching"] else "card",
+            "type": "card",
             "card_type": card_type,
             "content": card_content,
             "data": card_data
@@ -858,9 +897,9 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         if not suggestions:
 
             if workflow == "JDAnalysis":
-                suggestions = ["匹配度分析", "生成打招呼语"]
+                suggestions = ["匹配度分析", "提取核心考点"]
             elif workflow == "JobMatching":
-                suggestions = ["开始优化简历", "生成打招呼语"]
+                suggestions = ["开始优化简历", "分析不足之处"]
             elif workflow == "ResumeOptimization":
                 suggestions = ["开始生成简历", "面试准备", "生成打招呼语"]
             elif workflow == "InterviewPrep":
@@ -869,10 +908,7 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                 suggestions = ["开始复盘"]
             
         card["data"]["suggestions"] = suggestions
-        if workflow in ["JDAnalysis", "JobMatching"]:
-            yield "data: " + json.dumps({"type": "text", "content": card_content, "data": {"suggestions": suggestions}}) + "\n\n"
-        else:
-            yield f"data: {json.dumps(card)}\n\n"
+        yield f"data: {json.dumps(card)}\n\n"
             
         # Save Agent Message to DB
         saved_content = json.dumps({"card": card}, ensure_ascii=False)
