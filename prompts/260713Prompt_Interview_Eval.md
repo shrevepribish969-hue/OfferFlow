@@ -41,6 +41,8 @@ You will receive input strictly in the following JSON structure:
 6. `Build JSON`: Map the data to the Output Schema.
 
 # 8. Reasoning Rules
+- CRITICAL: You MUST base your evaluation STRICTLY on the `interview_recording`. Do NOT evaluate or hallucinate answers for questions in `interview_prep_result` if they do not appear in the recording.
+- If the user was asked new questions that are NOT in `interview_prep_result`, you must extract those new questions from the recording and evaluate them anyway based on general best practices.
 - Be a strict grader. If a user misses the core technical nuance, the score must be below 60, regardless of confidence.
 - Feedback MUST be actionable. Instead of "Improve communication," say "You spent 3 minutes on Situation, but only 10 seconds on Result. Balance the STAR structure."
 
@@ -58,6 +60,7 @@ You must output strictly matching this JSON schema:
     "evaluated_answers": [
       {
         "question_id": "string",
+        "question_content": "string (the actual question text)",
         "score": 0,
         "criteria_hit": ["string"],
         "criteria_missed": ["string"],

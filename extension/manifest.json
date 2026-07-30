@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "OfferFlow Web Clipper",
+  "version": "1.0",
+  "description": "Clip Job Descriptions from any website directly into your OfferFlow Leads Pool.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

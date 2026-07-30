@@ -86,6 +86,63 @@ class SkillExecutor:
 
 
     @staticmethod
+    async def execute_lead_screening_background(source_url: str, jd_content: str):
+        from .database import SessionLocal
+        from . import models
+        import json
+        
+        db_session = SessionLocal()
+        try:
+            if not jd_content:
+                return
+                
+            profile = db_session.query(models.UserProfile).first()
+            resume_text = profile.base_resume if profile else "{}"
+            try:
+                resume_json = json.loads(resume_text)
+            except:
+                resume_json = {"raw_text": resume_text}
+                
+            system_prompt = load_prompt("260713Prompt_Lead_Screening.md")
+            user_payload = {
+                "jd_raw_text": jd_content,
+                "resume_json": resume_json
+            }
+            
+            result = await SkillExecutor._call_llm(system_prompt, user_payload)
+            
+            if "error" not in result:
+                results_array = result.get("lead_screening_results", [])
+                
+                for res in results_array:
+                    new_lead = models.JobLead(
+                        source_url=source_url,
+                        jd_content=res.get("jd_snippet", jd_content[:1000]),
+                        company=res.get("company", "未知公司"),
+                        role=res.get("role", "未知岗位"),
+                        match_score=res.get("score"),
+                        analysis_reason=res.get("reason"),
+                        status="analyzed"
+                    )
+                    db_session.add(new_lead)
+                    
+            else:
+                # If error, create one failed lead so the user knows
+                new_lead = models.JobLead(
+                    source_url=source_url,
+                    jd_content=jd_content[:1000],
+                    status="error",
+                    analysis_reason=f"Analysis failed: {result.get('error_message')}"
+                )
+                db_session.add(new_lead)
+                
+            db_session.commit()
+        except Exception as e:
+            pass
+        finally:
+            db_session.close()
+
+    @staticmethod
     async def execute_jd_analysis(job: models.JobCase, db_session) -> dict:
         """Executes the real JD Analysis prompt."""
         if not job.jd_content:
@@ -493,7 +550,7 @@ class SkillExecutor:
         return SkillExecutor._format_success('greeting_generation', '1.0', result)
 
     @staticmethod
-    async def execute_interview_eval(job: models.JobCase, user_input: str, db_session) -> dict:
+    async def execute_interview_eval(job: models.JobCase, user_input: str, db_session, round_id: str = None) -> dict:
         w_data = job.workflow_data or {}
         jd_result = w_data.get("jd_analysis_result", {})
         prep_result = w_data.get("interview_prep_result", {})

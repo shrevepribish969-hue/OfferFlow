@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from . import models
 from .database import engine, get_db
+from .leads_router import router as leads_router
 
 from pydantic import BaseModel
 
@@ -24,6 +25,8 @@ class ProfileUpdate(BaseModel):
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.include_router(leads_router, prefix="/api/leads", tags=["leads"])
 
 app.add_middleware(
     CORSMiddleware,

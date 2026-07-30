@@ -132,3 +132,22 @@ class TimelineEvent(Base):
     event_type = Column(String, index=True, nullable=False)
     event_data = Column(JSON, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class JobLead(Base):
+    __tablename__ = "job_leads"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    company = Column(String, nullable=True)
+    role = Column(String, nullable=True)
+    source_url = Column(String, nullable=True)     
+    jd_content = Column(Text, nullable=True)       
+    
+    status = Column(String, default="unscreened") 
+    
+    match_score = Column(Integer, nullable=True)   
+    analysis_reason = Column(Text, nullable=True)  
+    
+    promoted_job_case_id = Column(Integer, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
