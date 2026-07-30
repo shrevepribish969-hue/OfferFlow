@@ -355,6 +355,20 @@ class FeedbackCreate(BaseModel):
     note: str | None = None
     event_data: dict = {}
 
+def _feedback_target_matches(event: models.FeedbackEvent, req: FeedbackCreate) -> bool:
+    req_data = req.event_data or {}
+    event_data = event.event_data or {}
+    req_ai_run_id = req_data.get("ai_run_id")
+    event_ai_run_id = event_data.get("ai_run_id")
+
+    if req_ai_run_id is not None:
+        return str(event_ai_run_id) == str(req_ai_run_id)
+    if req.message_id:
+        return event.message_id == req.message_id
+    if req.card_type:
+        return event.card_type == req.card_type
+    return False
+
 @app.get("/api/jobs/{job_id}/feedback")
 def get_job_feedback(job_id: int, db: Session = Depends(get_db)):
     events = db.query(models.FeedbackEvent).filter(
@@ -381,21 +395,36 @@ def create_job_feedback(job_id: int, req: FeedbackCreate, db: Session = Depends(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    event = models.FeedbackEvent(
-        job_case_id=job_id,
-        message_id=req.message_id,
-        card_type=req.card_type,
-        feedback=req.feedback,
-        feedback_type=req.feedback_type,
-        note=req.note,
-        event_data=req.event_data or {},
-    )
-    db.add(event)
+    existing_events = db.query(models.FeedbackEvent).filter(
+        models.FeedbackEvent.job_case_id == job_id
+    ).order_by(models.FeedbackEvent.created_at.desc()).all()
+    event = next((item for item in existing_events if _feedback_target_matches(item, req)), None)
+    result_status = "updated" if event else "created"
+
+    if event:
+        event.message_id = req.message_id
+        event.card_type = req.card_type
+        event.feedback = req.feedback
+        event.feedback_type = req.feedback_type
+        event.note = req.note
+        event.event_data = req.event_data or {}
+    else:
+        event = models.FeedbackEvent(
+            job_case_id=job_id,
+            message_id=req.message_id,
+            card_type=req.card_type,
+            feedback=req.feedback,
+            feedback_type=req.feedback_type,
+            note=req.note,
+            event_data=req.event_data or {},
+        )
+        db.add(event)
+
     db.commit()
     db.refresh(event)
     return {
         "id": event.id,
-        "status": "success",
+        "status": result_status,
         "feedback": event.feedback,
         "card_type": event.card_type,
         "created_at": event.created_at.isoformat() if event.created_at else None,
