@@ -1,320 +1,353 @@
-# OfferFlow Agentic Workspace Upgrade Plan
+# OfferFlow Agent 化工作台升级方案
 
-## 1. One-Sentence Positioning
+## 1. 一句话定位
 
-OfferFlow should evolve from an AI workflow tool into an Agentic job-search workspace.
+OfferFlow 下一阶段要从「AI 工作流工具」升级为「Agent 化求职工作台」。
 
-In plain language:
+用非技术语言说：
 
-> OfferFlow is not only a tool that generates resume or interview content. It is a workspace where an AI case manager observes the current job application, recommends the next best action, coordinates specialist AI skills, and learns from user feedback.
+> OfferFlow 不只是帮用户生成简历、面试题或打招呼语，而是一个能观察当前求职状态、判断下一步、协调不同 AI 能力、并根据用户反馈持续优化的求职工作台。
 
-## 2. Current Product State
+## 2. 当前项目状态
 
-The current product already has a strong foundation:
+当前 OfferFlow 已经有很好的基础，不是普通 CRUD 工具。
 
-- Job Case lifecycle management
-- ResumeVersion management
-- Interview round management
-- Reflection and Memory concepts
-- Agent routing design
-- JD analysis, job matching, resume optimization, interview preparation, interview evaluation, and greeting generation
-- Leads Pool and Chrome extension for job opportunity collection
-- Three-column workspace:
-  - Left: workflow stages
-  - Center: structured AI result cards
-  - Right: AI Copilot conversation
+目前已经具备：
 
-This is stronger than a normal CRUD tool because the product is organized around the full job-search journey, not isolated content generation.
+- Job Case 生命周期管理
+- ResumeVersion 简历版本管理
+- Interview 面试轮次管理
+- Reflection / Memory 复盘与记忆概念
+- Agent 路由设计
+- JD 分析、岗位匹配、简历优化、面试准备、面试复盘、打招呼语生成
+- Leads Pool 岗位线索池
+- Chrome extension 岗位采集入口
+- 三栏式工作台：
+  - 左侧：求职流程阶段
+  - 中间：每个阶段的结构化 AI 结果卡片
+  - 右侧：AI Copilot 对话区
 
-## 3. Why It Still Feels Like Workflow
+这个方向是对的。因为求职不是一次问答，而是一个长周期、多阶段、强上下文的任务。
 
-The current experience is closer to an Agentic Workflow than a mature Agent product.
+## 3. 为什么现在仍然偏 Workflow
 
-Current pattern:
+当前产品更准确地说是「Agentic Workflow」，还不是成熟的自主 Agent。
 
-1. User enters a Job Case.
-2. User selects a stage.
-3. User clicks or triggers a workflow.
-4. AI generates a result.
-5. The result appears as a card.
+现在的模式更像：
 
-This is useful and structured, but the AI is still mostly waiting for the user to decide what to do next.
+1. 用户进入一个 Job Case。
+2. 用户选择一个阶段。
+3. 用户点击或触发一个 workflow。
+4. AI 生成结果。
+5. 结果展示在中间卡片区。
 
-A more Agentic pattern would be:
+这个模式已经比普通 AI 工具强很多，因为它有流程、有上下文、有结构化结果。
 
-1. The AI observes the Job Case state.
-2. The AI identifies missing context, risks, and next actions.
-3. The AI explains why a step should happen next.
-4. The user confirms.
-5. The AI executes the right skill or workflow.
-6. The result is saved as a card, event, memory, or feedback signal.
+但它还不够 Agent，因为 AI 目前主要是在等待用户告诉它下一步做什么。
 
-The key difference:
+更 Agent 的模式应该是：
 
-> Workflow means the system follows predefined steps. Agent means the system can judge the next step based on the current state.
+1. AI 观察当前 Job Case 状态。
+2. AI 判断当前缺什么、风险是什么、下一步最该做什么。
+3. AI 解释为什么建议这样做。
+4. 用户确认。
+5. AI 调用对应的技能或工作流。
+6. 结果沉淀为卡片、事件、记忆或反馈信号。
 
-## 4. Target Product Shape
+核心区别：
 
-Keep the current three-column layout. It is the right product direction.
+> Workflow 是系统按照预设步骤走。Agent 是系统能根据当前状态判断下一步怎么走。
 
-The three columns can be redefined as:
+## 4. 目标产品形态
 
-- Left column: the Agent's task map
-- Center column: the Agent's work output
-- Right column: the Agent's reasoning, recommendation, and confirmation area
+当前三栏式页面不需要推翻，反而应该保留。
 
-This turns the UI from "workflow navigation plus chat" into "Agent-driven workspace".
+三栏可以重新定义为：
 
-## 5. Agent Roles
+- 左栏：Agent 看到的任务地图
+- 中栏：Agent 执行后的工作产物
+- 右栏：Agent 的判断、解释、建议和确认区
+
+这样 OfferFlow 就会从「流程导航 + 聊天助手」升级为「Agent 驱动的求职工作台」。
+
+## 5. Agent 角色设计
 
 ### 5.1 Case Manager Agent
 
-This should be the main user-facing Agent.
+这是最重要的用户主入口 Agent。
 
-Responsibilities:
+它负责：
 
-- Observe the current Job Case status
-- Identify what is missing
-- Recommend the next best action
-- Explain the recommendation
-- Ask for user confirmation
-- Route the task to specialist skills or agents
+- 观察当前 Job Case 状态
+- 判断当前缺少什么信息
+- 推荐下一步行动
+- 解释推荐理由
+- 等用户确认后再执行
+- 把任务分发给具体的专业 Agent 或 Skill
 
-Example:
+示例：
 
-> I checked this Job Case. The JD has been analyzed, but there is no job matching result yet. I suggest running job matching before resume optimization, because the resume strategy should be based on concrete gaps and evidence.
+> 我检查了当前 Job Case。JD 已经完成分析，但还没有岗位匹配结果。建议先做岗位匹配，再做简历优化。原因是简历优化应该基于具体能力缺口和匹配证据，而不是直接改写。
 
 ### 5.2 Resume Agent
 
-Responsibilities:
+它负责简历相关任务：
 
-- Analyze resume evidence
-- Propose resume patches
-- Explain why each patch helps
-- Avoid unsupported or fabricated claims
-- Track which suggestions are accepted or rejected
+- 分析简历中的证据
+- 提出定向优化建议
+- 解释每条修改为什么有帮助
+- 避免编造经历或夸大事实
+- 记录用户接受或拒绝了哪些建议
 
 ### 5.3 Interview Agent
 
-Responsibilities:
+它负责面试相关任务：
 
-- Generate interview preparation packs
-- Retrieve relevant real interview questions
-- Match questions with user stories
-- Evaluate interview answers
-- Identify recurring weaknesses
+- 生成面试准备包
+- 从真实面经库里检索相关问题
+- 把问题和用户经历进行匹配
+- 评估用户面试回答
+- 识别反复出现的能力短板
 
 ### 5.4 Reflection Agent
 
-Responsibilities:
+它负责复盘和长期成长：
 
-- Turn interview results into structured reflection
-- Extract memory candidates
-- Ask the user to confirm important long-term memories
-- Prevent memory pollution
+- 把面试结果转化为结构化复盘
+- 提取可能值得长期保存的记忆
+- 让用户确认是否保存这些记忆
+- 避免错误记忆、脏记忆污染后续生成
 
 ### 5.5 Communication Agent
 
-Responsibilities:
+它负责沟通内容：
 
-- Generate greeting, follow-up, thank-you, and negotiation drafts
-- Use only supported resume evidence
-- Adapt to user tone preference
-- Avoid unsafe claims
+- 生成 Boss 打招呼语、HR 跟进、感谢信、Offer 沟通话术
+- 只使用用户简历里真实存在的证据
+- 适配用户偏好的表达风格
+- 避免生成没有依据的承诺或夸大表述
 
-## 6. P0 Upgrade: Next Best Action
+## 6. P0 优化：下一步建议
 
-This is the most important Agent upgrade.
+这是最重要的 Agent 化升级。
 
-The system should show a "Current Diagnosis" or "Next Best Action" in the right Copilot area.
+系统应该在右侧 Copilot 区展示「当前状态诊断」或「下一步建议」。
 
-Example states:
+示例：
 
-- No JD analysis yet:
-  - Recommendation: Analyze JD first.
-  - Reason: Matching and resume optimization need structured JD requirements.
+### 情况 1：还没有 JD 分析
 
-- JD analyzed but no matching result:
-  - Recommendation: Run job matching.
-  - Reason: The system needs to know skill gaps before rewriting the resume.
+建议：
 
-- Resume optimized but not applied:
-  - Recommendation: Review and accept resume patches.
-  - Reason: AI should not directly finalize career-impacting content without user confirmation.
+> 先分析 JD。
 
-- Interview evaluation completed:
-  - Recommendation: Create reflection and memory candidates.
-  - Reason: Interview feedback should become reusable long-term learning.
+理由：
 
-This one feature makes OfferFlow feel much more like an Agent product because the AI begins to observe and recommend, instead of only responding.
+> 岗位匹配和简历优化都需要先知道岗位要求，否则后续生成会缺少依据。
 
-## 7. P0 Upgrade: User Feedback Loop
+### 情况 2：有 JD 分析，但没有岗位匹配
 
-Every important AI output should support lightweight feedback.
+建议：
 
-For resume patches:
+> 先做岗位匹配。
 
-- Accept
-- Reject
-- Inaccurate
-- Too generic
-- Fabrication risk
+理由：
 
-For interview questions:
+> 系统需要先知道你的能力优势和短板，再决定简历应该重点优化哪里。
 
-- Helpful
-- Not relevant
-- Too easy
-- Too hard
-- Needs follow-up
+### 情况 3：简历已经优化，但还没有投递
 
-For generated communication:
+建议：
 
-- Good to send
-- Too formal
-- Too casual
-- Unsupported claim
-- Rewrite
+> 先审核并确认简历修改建议。
 
-Product value:
+理由：
 
-> OfferFlow can learn from what the user accepts, rejects, and corrects. This turns one-time generation into a continuous optimization loop.
+> 简历属于职业关键内容，AI 不应该自动替用户最终确认，需要用户检查后再使用。
 
-## 8. P0 Upgrade: AI Work Records
+### 情况 4：面试复盘已经完成
 
-The product should record what the AI did.
+建议：
 
-Each AI run should ideally include:
+> 将本次面试暴露的问题整理成长期记忆。
 
-- Skill or Agent name
-- Prompt version
-- Model name
-- Input summary
-- Output summary
-- Status
-- Error if any
-- Latency
-- User feedback
-- Related Job Case
+理由：
 
-This is important because AI products need traceability.
+> 这些经验可以用于下一轮面试准备，让系统越用越懂用户。
 
-Interview explanation:
+这个功能会明显增强 Agent 感，因为 AI 开始主动观察和建议，而不是只在用户点击按钮后执行。
 
-> I added AI work records so that each AI output can be traced, evaluated, and improved. This supports badcase analysis, prompt iteration, and product quality measurement.
+## 7. P0 优化：用户反馈闭环
 
-## 9. P1 Upgrade: RAG Interview Preparation
+每个重要 AI 结果都应该允许用户给反馈。
 
-OfferFlow already has a knowledge base and retrieval prototype. The next step is to make it product-visible and evaluable.
+### 简历优化建议反馈
 
-Target flow:
+- 接受
+- 拒绝
+- 不准确
+- 太空泛
+- 有编造风险
 
-1. Analyze JD requirements.
-2. Build a query from company, role, skills, and responsibilities.
-3. Retrieve real interview questions from the knowledge base.
-4. Rerank by company relevance, role relevance, competency match, and difficulty.
-5. Generate preparation advice based on retrieved questions and user stories.
-6. Show question sources to the user.
+### 面试题反馈
 
-Product value:
+- 有帮助
+- 不相关
+- 太简单
+- 太难
+- 需要继续追问
 
-> Interview preparation becomes grounded in real interview data, instead of looking like pure model imagination.
+### 沟通话术反馈
 
-## 10. P1 Upgrade: Confirmable Memory
+- 可以发送
+- 太正式
+- 太随意
+- 有不真实表述
+- 重新生成
 
-Memory should not be written silently.
+产品价值：
 
-Better flow:
+> OfferFlow 可以知道用户认可了什么、不认可什么，以及哪些 AI 输出存在问题。这样系统就不是一次性生成，而是在持续学习和优化。
 
-1. Reflection Agent finds a memory candidate.
-2. System shows it to the user.
-3. User confirms, edits, or rejects it.
-4. Only confirmed or high-confidence memory is used for future generation.
+## 8. P0 优化：AI 工作记录
 
-Example:
+系统应该记录 AI 每次做了什么。
 
-> I noticed a recurring weakness: when answering data metric questions, your answers often lack business outcome framing. Should I save this as a long-term interview preparation focus?
+每次 AI 运行最好记录：
 
-Product value:
+- 哪个 Skill 或 Agent 执行了任务
+- 使用了哪个 Prompt 版本
+- 使用了哪个模型
+- 输入是什么
+- 输出是什么
+- 是否成功
+- 是否报错
+- 花了多久
+- 用户是否采纳
+- 属于哪个 Job Case
 
-> This avoids memory pollution and gives the user control over what the AI remembers.
+这对 AI 产品非常重要，因为 AI 结果必须可追踪、可复盘、可优化。
 
-## 11. P2 Upgrade: Badcase Lab
+面试表达：
 
-Badcase Lab is a showcase feature for AI product thinking.
+> 我希望 OfferFlow 的每一次 AI 输出都不是黑盒，而是可以追踪输入、输出、模型、Prompt 版本和用户反馈。这样可以支持 badcase 分析、Prompt 迭代和 AI 质量评估。
 
-It can show:
+## 9. P1 优化：RAG 面试准备
 
-- Which AI output was bad
-- Why the user marked it bad
-- Badcase category
-  - hallucination
-  - irrelevant
-  - too generic
-  - wrong format
-  - weak reasoning
-- Original input
-- Original output
-- Improved prompt or rule
-- New output
-- Quality comparison
+OfferFlow 已经有面经知识库和检索雏形，下一步应该把它做得更完整、更可解释。
 
-Interview value:
+目标流程：
 
-> This demonstrates that the project has an AI quality improvement loop, not only feature demos.
+1. 先分析 JD 要求。
+2. 根据公司、岗位、能力要求生成检索 query。
+3. 从真实面经知识库里找相关问题。
+4. 按公司相关度、岗位相关度、能力匹配度、难度进行排序。
+5. 结合用户简历和项目经历生成面试准备建议。
+6. 在前端展示每道题的来源。
 
-## 12. P2 Upgrade: Strategy Dashboard
+产品价值：
 
-The dashboard can show:
+> 面试准备不是 AI 凭空生成，而是基于真实面经检索，再结合用户个人经历进行定制。
 
-- Which jobs are worth applying to
-- Which jobs have high risk
-- Which jobs need follow-up
-- Which interviews need preparation
-- User's recurring weaknesses
-- Recommended next actions across all Job Cases
+## 10. P1 优化：可确认的 Memory
 
-Product value:
+Memory 不应该由 AI 静默写入。
 
-> OfferFlow becomes a job-search strategy system, not only a task execution tool.
+更好的流程是：
 
-## 13. Safe Implementation Strategy
+1. Reflection Agent 发现一个可能值得保存的长期记忆。
+2. 系统展示给用户。
+3. 用户可以确认、修改或拒绝。
+4. 只有确认过或高置信度的记忆，才用于后续生成。
 
-To protect the current working version, upgrades should be done in this order:
+示例：
 
-1. Create a new branch from the stable version.
-2. Add documentation first.
-3. Add new data structures as sidecar records.
-4. Do not replace existing workflows at first.
-5. Add feature flags for Agent recommendations.
-6. Let the user manually confirm Agent actions.
-7. Only after validation, connect Agent recommendations into the main workflow.
+> 我发现你在回答数据指标类问题时，容易缺少业务结果和指标闭环。是否将它保存为长期面试准备重点？
 
-Rule:
+产品价值：
 
-> New Agent features should observe and recommend first. They should not take over the existing workflow immediately.
+> 这样可以避免 AI 记错用户，也能让用户控制 AI 到底记住什么。
 
-## 14. Interview Narrative
+## 11. P2 优化：Badcase Lab
 
-A strong explanation:
+Badcase Lab 是一个很适合展示 AI 产品能力的亮点。
 
-> I initially designed OfferFlow as an AI Copilot chat experience. But during product iteration, I realized job search is not a one-turn conversation. It is a long-cycle, multi-stage, high-context workflow. So I redesigned it into a three-column workspace: lifecycle navigation on the left, structured AI outputs in the center, and Copilot interaction on the right.
+它可以展示：
+
+- 哪次 AI 输出不好
+- 用户为什么不满意
+- 属于哪类问题
+  - 编造事实
+  - 不相关
+  - 太空泛
+  - 格式错误
+  - 推理不足
+- 原始输入
+- 原始输出
+- 修改后的 Prompt 或规则
+- 修复后的新输出
+- 修复前后质量对比
+
+面试价值：
+
+> 这能证明你理解 AI 产品不是上线一个生成能力就结束，而是需要持续评测、发现 badcase、迭代优化。
+
+## 12. P2 优化：求职策略 Dashboard
+
+Dashboard 不只是展示岗位列表，而是帮助用户做求职策略判断。
+
+可以展示：
+
+- 哪些岗位值得投
+- 哪些岗位风险高
+- 哪些岗位需要跟进
+- 哪些面试需要准备
+- 用户当前反复出现的能力短板
+- 所有 Job Case 里的下一步建议
+
+产品价值：
+
+> OfferFlow 会从任务执行工具升级为求职策略系统。
+
+## 13. 安全实现策略
+
+为了保护当前已经验证成功的版本，升级应该按低风险方式推进。
+
+建议顺序：
+
+1. 从当前稳定版本新建分支。
+2. 先写文档和方案。
+3. 新增旁路数据结构，不替换旧逻辑。
+4. 不要一开始就接管现有 workflow。
+5. Agent 建议先做成可关闭功能。
+6. Agent 执行动作前必须让用户确认。
+7. 验证稳定后，再逐步接入主流程。
+
+原则：
+
+> 新 Agent 功能先观察、建议、记录，不要立刻接管原有流程。
+
+## 14. 面试叙事
+
+可以这样讲：
+
+> 我最初把 OfferFlow 设计成一个 AI Copilot 对话体验。但在迭代过程中，我发现求职不是一次问答，而是一个长周期、多阶段、强上下文的任务。单纯聊天无法很好承载流程进展、阶段产物和长期记忆，所以我把产品升级成三栏式 Workspace：左侧管理 Job Case 生命周期，中间展示每个阶段的结构化 AI 产物，右侧保留 Copilot 作为 Agent 交互入口。
 >
-> The current version is an Agentic Workflow system. It already has Job Case context, specialist AI skills, Agent routing, memory, and evaluation assets. The next step is to upgrade the Copilot into a Case Manager Agent that observes Job Case state, recommends the next best action, coordinates specialist agents, and learns from user feedback.
+> 当前版本更准确地说是 Agentic Workflow：它已经有 Job Case 上下文、专业 AI Skill、Agent 路由、Memory 和 Evaluation 雏形。下一阶段我要把右侧 Copilot 升级成 Case Manager Agent，让它能够观察当前 Job Case 状态，主动推荐下一步，协调 Resume Agent、Interview Agent、Reflection Agent 等专业能力，并通过用户反馈持续优化。
 
-Short version:
+短版本：
 
-> OfferFlow is evolving from a workflow-driven AI tool into an Agentic Workspace for job search.
+> OfferFlow 正在从工作流驱动的 AI 求职工具，升级为 Agent 驱动的求职工作台。
 
-## 15. Recommended Next Step
+## 15. 推荐下一步
 
-The best next product iteration is:
+最建议先做三个 P0 能力：
 
-1. Add Next Best Action recommendations.
-2. Add user feedback on AI outputs.
-3. Add AI work records.
+1. 下一步建议
+2. 用户反馈闭环
+3. AI 工作记录
 
-These three changes create the core Agent loop:
+这三个能力会形成 Agent 产品最核心的闭环：
 
-> observe state -> recommend action -> execute skill -> collect feedback -> improve future decisions
+> 观察状态 -> 推荐行动 -> 执行任务 -> 收集反馈 -> 优化下一次判断
 
