@@ -401,6 +401,30 @@ def create_job_feedback(job_id: int, req: FeedbackCreate, db: Session = Depends(
         "created_at": event.created_at.isoformat() if event.created_at else None,
     }
 
+@app.get("/api/jobs/{job_id}/ai_runs")
+def get_job_ai_runs(job_id: int, db: Session = Depends(get_db)):
+    runs = db.query(models.AIRun).filter(
+        models.AIRun.job_case_id == job_id
+    ).order_by(models.AIRun.started_at.desc()).all()
+    return [
+        {
+            "id": run.id,
+            "job_case_id": run.job_case_id,
+            "workflow_name": run.workflow_name,
+            "agent_name": run.agent_name,
+            "status": run.status,
+            "model_name": run.model_name,
+            "input_summary": run.input_summary,
+            "output_summary": run.output_summary,
+            "error_message": run.error_message,
+            "latency_ms": run.latency_ms,
+            "run_data": run.run_data,
+            "started_at": run.started_at.isoformat() if run.started_at else None,
+            "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+        }
+        for run in runs
+    ]
+
 from fastapi.responses import StreamingResponse
 import asyncio
 import json
@@ -509,6 +533,42 @@ try:
         ROUTER_PROMPT = f.read()
 except Exception:
     ROUTER_PROMPT = "You are an Agent Brain. Reply in JSON."
+
+def start_ai_run(db: Session, job_id: int, workflow_name: str, agent_name: str | None, input_summary: str = ""):
+    run = models.AIRun(
+        job_case_id=job_id,
+        workflow_name=workflow_name or "Unknown",
+        agent_name=agent_name,
+        status="running",
+        model_name=MODEL_NAME,
+        input_summary=input_summary[:1000] if input_summary else "",
+    )
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+    return run
+
+def finish_ai_run(db: Session, run_id: int | None, status: str, output_summary: str = "", error_message: str = "", run_data: dict | None = None):
+    if not run_id:
+        return None
+    from datetime import datetime, timezone
+    run = db.query(models.AIRun).filter(models.AIRun.id == run_id).first()
+    if not run:
+        return None
+    completed_at = datetime.now(timezone.utc)
+    run.status = status
+    run.output_summary = output_summary[:1000] if output_summary else ""
+    run.error_message = error_message[:1000] if error_message else None
+    run.run_data = run_data or run.run_data or {}
+    run.completed_at = completed_at
+    if run.started_at:
+        started_at = run.started_at
+        if started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=timezone.utc)
+        run.latency_ms = int((completed_at - started_at).total_seconds() * 1000)
+    db.commit()
+    db.refresh(run)
+    return run
 
 class AgentBrain:
     @staticmethod
@@ -650,10 +710,13 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         agent = WorkflowRouter.route(workflow)
         if not agent:
             fallback_reply = "Unknown workflow: " + workflow
+            failed_run = start_ai_run(db, job_id, workflow or "Unknown", None, req.message or "")
+            finish_ai_run(db, failed_run.id, "failed", fallback_reply, fallback_reply, {"intent": intent})
             yield "data: " + json.dumps({"type": "text", "content": fallback_reply, "data": {"suggestions": suggestions}}) + "\n\n"
             return
 
         agent_name = agent.name
+        ai_run = start_ai_run(db, job_id, workflow, agent_name, req.message or "")
 
         if workflow == "ResumeOptimization":
             main_title = "Optimizing resume for JD..."
@@ -943,7 +1006,20 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             
         # Final Card
         # Phase 8: Attach agent metadata
+        is_error_card = isinstance(card_content, str) and card_content.startswith("Error:")
+        completed_run = finish_ai_run(
+            db,
+            ai_run.id,
+            "failed" if is_error_card else "success",
+            card_content,
+            card_content if is_error_card else "",
+            {
+                "card_type": card_type,
+                "suggestion_count": len(suggestions),
+            },
+        )
         card_data["agent"] = agent_name
+        card_data["ai_run_id"] = completed_run.id if completed_run else ai_run.id
         card = {
             "type": "card",
             "card_type": card_type,

@@ -146,6 +146,23 @@ class FeedbackEvent(Base):
     event_data = Column(JSON, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class AIRun(Base):
+    __tablename__ = "ai_runs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_case_id = Column(Integer, index=True, nullable=False)
+    workflow_name = Column(String, index=True, nullable=False)
+    agent_name = Column(String, index=True, nullable=True)
+    status = Column(String, index=True, default="running")
+    model_name = Column(String, nullable=True)
+    input_summary = Column(Text, nullable=True)
+    output_summary = Column(Text, nullable=True)
+    error_message = Column(Text, nullable=True)
+    latency_ms = Column(Integer, nullable=True)
+    run_data = Column(JSON, default=dict)
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
 class JobLead(Base):
     __tablename__ = "job_leads"
     
