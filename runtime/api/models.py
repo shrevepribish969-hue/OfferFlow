@@ -133,6 +133,19 @@ class TimelineEvent(Base):
     event_data = Column(JSON, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class FeedbackEvent(Base):
+    __tablename__ = "feedback_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_case_id = Column(Integer, index=True, nullable=False)
+    message_id = Column(String, nullable=True)
+    card_type = Column(String, index=True, nullable=True)
+    feedback = Column(String, index=True, nullable=False)
+    feedback_type = Column(String, index=True, default="quality")
+    note = Column(Text, nullable=True)
+    event_data = Column(JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 class JobLead(Base):
     __tablename__ = "job_leads"
     

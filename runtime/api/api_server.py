@@ -347,6 +347,60 @@ def update_job_status(job_id: int, req: StatusUpdate, db: Session = Depends(get_
     db.refresh(job)
     return {"status": "success", "new_status": job.status}
 
+class FeedbackCreate(BaseModel):
+    message_id: str | None = None
+    card_type: str | None = None
+    feedback: str
+    feedback_type: str = "quality"
+    note: str | None = None
+    event_data: dict = {}
+
+@app.get("/api/jobs/{job_id}/feedback")
+def get_job_feedback(job_id: int, db: Session = Depends(get_db)):
+    events = db.query(models.FeedbackEvent).filter(
+        models.FeedbackEvent.job_case_id == job_id
+    ).order_by(models.FeedbackEvent.created_at.desc()).all()
+    return [
+        {
+            "id": event.id,
+            "job_case_id": event.job_case_id,
+            "message_id": event.message_id,
+            "card_type": event.card_type,
+            "feedback": event.feedback,
+            "feedback_type": event.feedback_type,
+            "note": event.note,
+            "event_data": event.event_data,
+            "created_at": event.created_at.isoformat() if event.created_at else None,
+        }
+        for event in events
+    ]
+
+@app.post("/api/jobs/{job_id}/feedback")
+def create_job_feedback(job_id: int, req: FeedbackCreate, db: Session = Depends(get_db)):
+    job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    event = models.FeedbackEvent(
+        job_case_id=job_id,
+        message_id=req.message_id,
+        card_type=req.card_type,
+        feedback=req.feedback,
+        feedback_type=req.feedback_type,
+        note=req.note,
+        event_data=req.event_data or {},
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return {
+        "id": event.id,
+        "status": "success",
+        "feedback": event.feedback,
+        "card_type": event.card_type,
+        "created_at": event.created_at.isoformat() if event.created_at else None,
+    }
+
 from fastapi.responses import StreamingResponse
 import asyncio
 import json
