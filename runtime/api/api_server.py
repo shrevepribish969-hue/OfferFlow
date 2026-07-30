@@ -369,6 +369,34 @@ def _feedback_target_matches(event: models.FeedbackEvent, req: FeedbackCreate) -
         return event.card_type == req.card_type
     return False
 
+def _normalize_feedback_event_data(req: FeedbackCreate) -> dict:
+    event_data = dict(req.event_data or {})
+    if event_data.get("feedback_code") and event_data.get("feedback_category"):
+        return event_data
+
+    mapping = {
+        "有帮助": ("helpful", "user_accepted", "quality"),
+        "可以使用": ("ready_to_use", "user_accepted", "quality"),
+        "不准确": ("accuracy_error", "accuracy", "badcase_candidate"),
+        "太空泛": ("too_generic", "specificity", "badcase_candidate"),
+        "有编造风险": ("fabrication_risk", "faithfulness", "badcase_candidate"),
+        "有不真实表述": ("fabrication_risk", "faithfulness", "badcase_candidate"),
+        "不相关": ("irrelevant", "relevance", "badcase_candidate"),
+        "太简单": ("too_simple", "difficulty", "badcase_candidate"),
+        "需要追问": ("needs_followup", "coverage", "quality"),
+        "太正式": ("too_formal", "tone", "badcase_candidate"),
+        "太随意": ("too_casual", "tone", "badcase_candidate"),
+    }
+    code, category, normalized_type = mapping.get(
+        req.feedback,
+        ("unknown_feedback", "other", req.feedback_type or "quality"),
+    )
+    event_data.setdefault("feedback_code", code)
+    event_data.setdefault("feedback_category", category)
+    event_data.setdefault("feedback_label", req.feedback)
+    event_data.setdefault("normalized_feedback_type", normalized_type)
+    return event_data
+
 @app.get("/api/jobs/{job_id}/feedback")
 def get_job_feedback(job_id: int, db: Session = Depends(get_db)):
     events = db.query(models.FeedbackEvent).filter(
@@ -401,13 +429,15 @@ def create_job_feedback(job_id: int, req: FeedbackCreate, db: Session = Depends(
     event = next((item for item in existing_events if _feedback_target_matches(item, req)), None)
     result_status = "updated" if event else "created"
 
+    normalized_event_data = _normalize_feedback_event_data(req)
+
     if event:
         event.message_id = req.message_id
         event.card_type = req.card_type
         event.feedback = req.feedback
         event.feedback_type = req.feedback_type
         event.note = req.note
-        event.event_data = req.event_data or {}
+        event.event_data = normalized_event_data
     else:
         event = models.FeedbackEvent(
             job_case_id=job_id,
@@ -416,7 +446,7 @@ def create_job_feedback(job_id: int, req: FeedbackCreate, db: Session = Depends(
             feedback=req.feedback,
             feedback_type=req.feedback_type,
             note=req.note,
-            event_data=req.event_data or {},
+            event_data=normalized_event_data,
         )
         db.add(event)
 
