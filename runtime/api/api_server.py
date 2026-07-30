@@ -570,6 +570,36 @@ def finish_ai_run(db: Session, run_id: int | None, status: str, output_summary: 
     db.refresh(run)
     return run
 
+def build_ai_run_summary(workflow_name: str, card_content: str, card_data: dict) -> str:
+    if isinstance(card_content, str) and card_content.startswith("Error:"):
+        return card_content
+
+    if workflow_name == "ResumeOptimization":
+        patches = card_data.get("optimization_patches") or []
+        if patches:
+            return f"已生成 {len(patches)} 条简历定向优化建议"
+        return "已生成简历定向优化建议，请在中间工作区查看"
+
+    if workflow_name == "JobMatching":
+        match_data = card_data.get("match_data") or {}
+        score = match_data.get("score")
+        if score != "?":
+            return f"已完成岗位匹配分析，匹配分 {score}"
+        return "已完成岗位匹配分析"
+
+    if workflow_name == "JDAnalysis":
+        return "已完成岗位 JD 结构化分析"
+    if workflow_name == "ContentGeneration":
+        return "已生成最终内容版本"
+    if workflow_name == "InterviewPrep":
+        return "已生成面试准备内容"
+    if workflow_name == "InterviewEvaluation":
+        return "已完成面试评估与复盘"
+    if workflow_name == "GreetingGeneration":
+        return "已生成投递沟通话术"
+
+    return card_content or "AI 任务已完成"
+
 class AgentBrain:
     @staticmethod
     async def process(msg: str, context: dict = None) -> dict:
@@ -1007,15 +1037,18 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         # Final Card
         # Phase 8: Attach agent metadata
         is_error_card = isinstance(card_content, str) and card_content.startswith("Error:")
+        ai_run_summary = build_ai_run_summary(workflow, card_content, card_data)
         completed_run = finish_ai_run(
             db,
             ai_run.id,
             "failed" if is_error_card else "success",
-            card_content,
+            ai_run_summary,
             card_content if is_error_card else "",
             {
                 "card_type": card_type,
                 "suggestion_count": len(suggestions),
+                "artifact_count": len(card_data.get("optimization_patches", [])) if isinstance(card_data.get("optimization_patches"), list) else None,
+                "sidebar_summary": card_data.get("sidebar_summary"),
             },
         )
         card_data["agent"] = agent_name
