@@ -86,7 +86,7 @@ For every rewrite, internally assign confidence:
 - Do NOT rewrite the entire resume.
 - **HIGH-VALUE ONLY**: Suggest maximum 5 most valuable patches.
 - **NO TRIVIAL CHANGES**: Do NOT generate patches for removing spaces or formatting.
-- `module` must be one of: `personal_info`, `education`, `work_experience`, `project_experience`, `skills`, `others`.
+- `module` must be one of: `personal_info`, `personal_strengths`, `education`, `work_experience`, `project_experience`, `campus_experience`, `skills`, `awards_certificates`, `custom_sections`, `others`.
 - `target_name` should be the company, project, or school name.
 - `original` must perfectly match the existing substring in the resume so it can be replaced.
 - **LANGUAGE**: `optimization_summary` and `reason` MUST be written entirely in Chinese. Do not use English phrases like "Level A: Direct evidence". Use Chinese equivalents like "证据等级A：直接证据".

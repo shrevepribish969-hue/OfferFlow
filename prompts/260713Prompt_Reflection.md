@@ -1,4 +1,4 @@
-# Skill Prompt: Reflection (Version 2.0)
+# Skill Prompt: Reflection (Version 2.1)
 
 > **[Inheritance]**
 > This Skill inherits all rules from `260713Prompt_Base.md`.
@@ -34,11 +34,12 @@ Synthesize the objective evaluation of an interview (`interview_eval_result`) ag
 1. `Summarize Performance`: Aggregate the scores and feedback from `interview_eval_result`.
 2. `Extract Gaps`: Identify systemic gaps (e.g., "Consistently fails at System Design").
 3. `Identify Patterns`: Abstract the gaps from this specific company into a universal trait (e.g., instead of "Failed Tencent's question", use "Lacks understanding of high-concurrency caching").
-4. `Format Insights`: Prepare the `knowledge_tags` and `insights` for the Memory tool.
+4. `Format Insights`: Prepare the `knowledge_tags` and `insights` as Memory candidates. They remain inactive until the user confirms, edits, or rejects them.
 5. `Trigger Tools`: Construct the JSON payload containing BOTH Tool Calls.
 
 # 8. Reasoning Rules
 - Memory Insights must be completely decoupled from the specific company or interviewer. They must be abstract enough to be useful for the next entirely different job application.
+- Never assume a Memory candidate has been accepted. The application owns the confirmation step and only confirmed memories may affect later generation.
 - If the overall score is > 85, focus insights on "Strengths/Core Competencies" rather than just weaknesses.
 
 # 9. Output Schema

@@ -27,10 +27,47 @@ async def clip_lead(req: LeadClipRequest, db: Session = Depends(get_db)):
     if not req.jd_content or len(req.jd_content) < 10:
         raise HTTPException(status_code=400, detail="JD content too short")
         
-    # Trigger background analysis
-    asyncio.create_task(SkillExecutor.execute_lead_screening_background(req.source_url or "", req.jd_content))
+    pending_lead = models.JobLead(
+        source_url=req.source_url or "",
+        jd_content=req.jd_content,
+        status="unscreened",
+        analysis_reason="AI 正在识别岗位信息…",
+    )
+    db.add(pending_lead)
+    db.commit()
+    db.refresh(pending_lead)
+
+    # Trigger background analysis and update the visible placeholder when done.
+    asyncio.create_task(
+        SkillExecutor.execute_lead_screening_background(
+            req.source_url or "", req.jd_content, pending_lead.id
+        )
+    )
     
-    return {"status": "success", "message": "Raw text captured. Background AI screening started for all jobs found."}
+    return {
+        "status": "success",
+        "lead_id": pending_lead.id,
+        "message": "Raw text captured. Background AI screening started for all jobs found.",
+    }
+
+@router.post("/{lead_id}/retry")
+async def retry_lead(lead_id: int, db: Session = Depends(get_db)):
+    lead = db.query(models.JobLead).filter(models.JobLead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if not lead.jd_content:
+        raise HTTPException(status_code=400, detail="Lead has no JD content")
+
+    lead.status = "unscreened"
+    lead.analysis_reason = "AI 正在重新识别岗位信息…"
+    db.commit()
+
+    asyncio.create_task(
+        SkillExecutor.execute_lead_screening_background(
+            lead.source_url or "", lead.jd_content, lead.id
+        )
+    )
+    return {"status": "success", "lead_id": lead.id}
 
 @router.get("/")
 def get_leads(db: Session = Depends(get_db)):

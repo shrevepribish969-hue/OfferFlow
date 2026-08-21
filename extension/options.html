@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的求职资料 - OfferFlow</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <div class="brand">OF</div>
+      <div>
+        <p class="eyebrow">OFFERFLOW AUTOFILL</p>
+        <h1>我的求职资料</h1>
+        <p class="intro">资料只保存在当前浏览器。保存后，在招聘网站点击扩展图标即可自动填写。</p>
+      </div>
+    </header>
+
+    <form id="profileForm">
+      <section class="panel">
+        <div class="section-title"><span>01</span><div><h2>基本信息</h2><p>用于姓名、联系方式和所在地等常见字段</p></div></div>
+        <div class="form-grid">
+          <label><span>中文姓名</span><input name="fullName" autocomplete="name" placeholder="例如：张三"></label>
+          <label><span>英文名</span><input name="englishName" placeholder="例如：San Zhang"></label>
+          <label><span>手机号码</span><input name="phone" autocomplete="tel" inputmode="tel" placeholder="例如：13800000000"></label>
+          <label><span>邮箱</span><input name="email" autocomplete="email" type="email" placeholder="例如：name@example.com"></label>
+          <label><span>性别</span><select name="gender"><option value="">请选择</option><option value="男">男</option><option value="女">女</option><option value="其他">其他/不便透露</option></select></label>
+          <label><span>出生日期</span><input name="birthDate" type="date"></label>
+          <label><span>所在城市</span><input name="city" autocomplete="address-level2" placeholder="例如：上海"></label>
+          <label><span>籍贯</span><input name="hometown" placeholder="例如：江苏南京"></label>
+          <label class="wide"><span>现居地址</span><input name="address" autocomplete="street-address" placeholder="例如：上海市杨浦区……"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title education-title">
+          <span>02</span>
+          <div><h2>教育背景</h2><p>按时间从最近到最早填写，可保存多段教育经历</p></div>
+          <button id="addEducationBtn" class="add-button" type="button">＋ 新增教育经历</button>
+        </div>
+        <div id="educationList" class="education-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title"><span>03</span><div><h2>求职信息</h2><p>覆盖校园招聘中常见的求职意向字段</p></div></div>
+        <div class="form-grid">
+          <label><span>求职状态</span><select name="employmentStatus"><option value="">请选择</option><option>应届生</option><option>在职</option><option>离职</option><option>自由职业</option></select></label>
+          <label><span>期望职位</span><input name="desiredRole" placeholder="例如：产品经理"></label>
+          <label><span>期望城市</span><input name="desiredCity" placeholder="例如：上海、杭州"></label>
+          <label><span>最早到岗时间</span><input name="availableDate" type="date"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title"><span>04</span><div><h2>个人主页</h2><p>选填，用于社交账号和作品链接</p></div></div>
+        <div class="form-grid">
+          <label><span>微信号</span><input name="wechat" placeholder="微信号"></label>
+          <label><span>LinkedIn</span><input name="linkedin" type="url" placeholder="https://linkedin.com/in/..."></label>
+          <label><span>GitHub</span><input name="github" type="url" placeholder="https://github.com/..."></label>
+          <label><span>作品集 / 个人网站</span><input name="portfolio" type="url" placeholder="https://..."></label>
+        </div>
+      </section>
+
+      <div class="sticky-actions">
+        <span id="saveStatus" role="status" aria-live="polite"></span>
+        <button type="submit">保存资料</button>
+      </div>
+    </form>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

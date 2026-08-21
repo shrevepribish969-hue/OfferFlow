@@ -13,6 +13,12 @@ from dotenv import load_dotenv
 from . import models
 from .database import engine, get_db
 from .leads_router import router as leads_router
+from ..services.resume_parser_service import (
+    ResumeParseError,
+    normalize_resume_schema,
+    parse_resume_to_json,
+    quality_check_resume,
+)
 
 from pydantic import BaseModel
 
@@ -21,6 +27,10 @@ class JobCreate(BaseModel):
 
 class ProfileUpdate(BaseModel):
     base_resume: str
+
+class MemoryReviewRequest(BaseModel):
+    action: str
+    content: str | None = None
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -123,7 +133,61 @@ def get_profile(db: Session = Depends(get_db)):
         db.add(profile)
         db.commit()
         db.refresh(profile)
-    return {"base_resume": profile.base_resume}
+    if not profile.base_resume:
+        return {"base_resume": ""}
+    try:
+        normalized = normalize_resume_schema(profile.base_resume)
+        return {"base_resume": json.dumps(normalized, ensure_ascii=False)}
+    except Exception:
+        return {"base_resume": profile.base_resume}
+
+@app.get("/api/debug/deepseek_ping")
+async def debug_deepseek_ping():
+    """Check whether the running backend process can reach the model API."""
+    key = os.getenv("DEEPSEEK_API_KEY") or ""
+    base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+    model = os.getenv("MODEL_NAME", "deepseek-chat")
+    proxy_env = {
+        "HTTP_PROXY": bool(os.getenv("HTTP_PROXY")),
+        "HTTPS_PROXY": bool(os.getenv("HTTPS_PROXY")),
+        "http_proxy": bool(os.getenv("http_proxy")),
+        "https_proxy": bool(os.getenv("https_proxy")),
+    }
+    if not key:
+        return {
+            "ok": False,
+            "error_type": "MissingApiKey",
+            "error": "DEEPSEEK_API_KEY is not set in the running backend process.",
+            "base_url": base_url,
+            "model": model,
+            "proxy_env": proxy_env,
+        }
+
+    try:
+        client = AsyncOpenAI(api_key=key, base_url=base_url)
+        response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": "只回复 JSON: {\"ok\": true}"}],
+            temperature=0,
+            response_format={"type": "json_object"},
+            timeout=20,
+        )
+        return {
+            "ok": True,
+            "base_url": base_url,
+            "model": model,
+            "proxy_env": proxy_env,
+            "response": response.choices[0].message.content,
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "error_type": type(e).__name__,
+            "error": str(e),
+            "base_url": base_url,
+            "model": model,
+            "proxy_env": proxy_env,
+        }
 
 class ApplyUpdate(BaseModel):
     applied: bool
@@ -158,82 +222,6 @@ def update_offer(job_id: int, data: OfferUpdate, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "success"}
 
-async def parse_resume_to_json(raw_text: str) -> str:
-    from openai import AsyncOpenAI
-    client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
-    
-    prompt = """
-You are an expert resume parser. Your task is to faithfully extract all information from the provided raw resume text and convert it into a highly structured JSON format.
-CRITICAL RULES:
-1. DO NOT rewrite, summarize, or optimize any content. You must transcribe the original text exactly as it is.
-2. DO NOT change the user's original structure. For example, if they listed an internship under work experience, keep it in work_experience. Do not move things between sections arbitrarily.
-3. IMPORTANT: You must return ONLY valid JSON matching the exact schema below. Do not omit any sections; use empty arrays/strings if data is missing.
-
-SCHEMA:
-{
-  "personal_info": {
-    "name": "string",
-    "contact": "string",
-    "summary": "string"
-  },
-  "education": [
-    {
-      "school": "string",
-      "degree": "string",
-      "date": "string",
-      "major": "string"
-    }
-  ],
-  "work_experience": [
-    {
-      "company": "string",
-      "role": "string",
-      "date": "string",
-      "descriptions": ["string", "string"]
-    }
-  ],
-  "project_experience": [
-    {
-      "project": "string",
-      "role": "string",
-      "date": "string",
-      "descriptions": ["string", "string"]
-    }
-  ],
-  "skills": ["string"],
-  "others": ["string"]
-}
-"""
-    try:
-        response = await client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": raw_text[:4000]}
-            ],
-            temperature=0.0,
-            response_format={"type": "json_object"}
-        )
-        text = response.choices[0].message.content.strip()
-        import re
-        json_match = re.search(r'\{.*\}', text, re.DOTALL)
-        if json_match:
-            text = json_match.group(0)
-        import json
-        json.loads(text) # validate
-        return text
-    except Exception as e:
-        print("Failed to parse resume to JSON:", e)
-        import json
-        return json.dumps({
-            "personal_info": {"name": "Unknown", "contact": "", "summary": ""},
-            "education": [],
-            "work_experience": [{"company": "Unknown Company", "role": "", "date": "", "descriptions": [raw_text]}],
-            "project_experience": [],
-            "skills": [],
-            "others": []
-        }, ensure_ascii=False)
-
 @app.post("/api/user/resume_upload")
 async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
     content = ""
@@ -258,8 +246,12 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
         else:
             return {"error": "Unsupported file format. Please upload PDF, Word (docx), TXT, or MD files."}
             
-        
-        json_content = await parse_resume_to_json(content)
+        json_content = await parse_resume_to_json(
+            content,
+            api_key=API_KEY,
+            base_url=BASE_URL,
+            model_name=MODEL_NAME,
+        )
             
         profile = db.query(models.UserProfile).first()
         if not profile:
@@ -276,10 +268,15 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
         asyncio.create_task(StoryService.parse_resume_to_stories(db, profile.id))
         
         return {"message": "Resume parsed successfully.", "extracted_text": json_content}
+    except ResumeParseError as e:
+        raise HTTPException(
+            status_code=502 if e.error_code == "MODEL_CALL_FAILED" else 422,
+            detail={"error_code": e.error_code, "message": str(e)},
+        ) from e
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return {"error": f"File processing error: {str(e)}"}
+        raise HTTPException(status_code=500, detail={"error_code": "FILE_PROCESSING_ERROR", "message": str(e)}) from e
 
 @app.post("/api/user/profile")
 async def update_profile(prof: ProfileUpdate, db: Session = Depends(get_db)):
@@ -287,12 +284,18 @@ async def update_profile(prof: ProfileUpdate, db: Session = Depends(get_db)):
     
     # Check if the incoming string is valid JSON
     content_to_save = prof.base_resume
-    import json
     try:
-        json.loads(content_to_save)
-    except:
-        # Not JSON, parse it
-        content_to_save = await parse_resume_to_json(content_to_save)
+        parsed = json.loads(content_to_save)
+        content_to_save = json.dumps(quality_check_resume(parsed, content_to_save), ensure_ascii=False)
+    except json.JSONDecodeError:
+        content_to_save = await parse_resume_to_json(
+            content_to_save,
+            api_key=API_KEY,
+            base_url=BASE_URL,
+            model_name=MODEL_NAME,
+        )
+    except ResumeParseError as e:
+        raise HTTPException(status_code=422, detail={"error_code": e.error_code, "message": str(e)}) from e
         
     if not profile:
         profile = models.UserProfile(base_resume=content_to_save)
@@ -484,6 +487,12 @@ def get_job_ai_runs(job_id: int, db: Session = Depends(get_db)):
         for run in runs
     ]
 
+
+@app.get("/api/badcases")
+def get_badcases(db: Session = Depends(get_db)):
+    from ..services.badcase_service import BadcaseService
+    return BadcaseService.list_badcases(db)
+
 from fastapi.responses import StreamingResponse
 import asyncio
 import json
@@ -548,6 +557,26 @@ def get_memory(db: Session = Depends(get_db)):
     return context
 
 
+@app.get("/api/memory/items")
+def get_memory_items(db: Session = Depends(get_db)):
+    from ..services.memory_service import MemoryService
+    return MemoryService.list_items(db)
+
+
+@app.patch("/api/memory/items/{item_id}")
+def review_memory_item(item_id: int, request: MemoryReviewRequest, db: Session = Depends(get_db)):
+    from ..services.memory_service import MemoryService
+    try:
+        item = MemoryService.review_item(db, item_id, request.action, request.content)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not item:
+        raise HTTPException(status_code=404, detail="Memory item not found")
+    db.commit()
+    db.refresh(item)
+    return item
+
+
 class PatchRequest(BaseModel):
     module: str
     target_name: str
@@ -594,6 +623,25 @@ except Exception:
     ROUTER_PROMPT = "You are an Agent Brain. Reply in JSON."
 
 def start_ai_run(db: Session, job_id: int, workflow_name: str, agent_name: str | None, input_summary: str = ""):
+    # A disconnected browser or interrupted model request can leave a run in
+    # `running` forever. Retrying the same workflow must reclaim that stale run.
+    from datetime import datetime, timezone
+    stale_runs = db.query(models.AIRun).filter(
+        models.AIRun.job_case_id == job_id,
+        models.AIRun.workflow_name == (workflow_name or "Unknown"),
+        models.AIRun.status == "running",
+    ).all()
+    reclaimed_at = datetime.now(timezone.utc)
+    for stale_run in stale_runs:
+        stale_run.status = "failed"
+        stale_run.error_message = "任务被新的重试替代，上一请求未正常结束"
+        stale_run.completed_at = reclaimed_at
+        if stale_run.started_at:
+            started_at = stale_run.started_at
+            if started_at.tzinfo is None:
+                started_at = started_at.replace(tzinfo=timezone.utc)
+            stale_run.latency_ms = max(0, int((reclaimed_at - started_at).total_seconds() * 1000))
+
     run = models.AIRun(
         job_case_id=job_id,
         workflow_name=workflow_name or "Unknown",
@@ -628,6 +676,33 @@ def finish_ai_run(db: Session, run_id: int | None, status: str, output_summary: 
     db.commit()
     db.refresh(run)
     return run
+
+
+async def run_reflection_background(job_id: int):
+    """Update reflection memory without delaying the transcript analysis response."""
+    from .database import SessionLocal
+    from .workflow_engine import SkillExecutor
+
+    bg_db = SessionLocal()
+    reflection_run = None
+    try:
+        job = bg_db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+        if not job:
+            return
+        reflection_run = start_ai_run(bg_db, job_id, "Reflection", "Reflection Agent", "面试分析完成后后台复盘")
+        result = await SkillExecutor.execute_reflection(job, bg_db)
+        if "error" in result or result.get("status") == "error":
+            detail = result.get("error_message") or result.get("error_code") or "复盘失败"
+            finish_ai_run(bg_db, reflection_run.id, "failed", error_message=str(detail))
+        else:
+            bg_db.commit()
+            finish_ai_run(bg_db, reflection_run.id, "success", "已更新面试复盘记忆")
+    except Exception as exc:
+        bg_db.rollback()
+        if reflection_run:
+            finish_ai_run(bg_db, reflection_run.id, "failed", error_message=str(exc))
+    finally:
+        bg_db.close()
 
 def build_ai_run_summary(workflow_name: str, card_content: str, card_data: dict) -> str:
     if isinstance(card_content, str) and card_content.startswith("Error:"):
@@ -773,6 +848,17 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         intent = brain_result["intent"]
         reply = brain_result["reply"]
         workflow = brain_result["workflow"]
+
+    # Preserve long transcripts before starting the streaming/model request so
+    # an interrupted browser connection never destroys the user's input.
+    if job and workflow == "InterviewEvaluation":
+        workflow_data = dict(job.workflow_data) if job.workflow_data else {}
+        if req.message and req.message != "system_trigger":
+            workflow_data["pending_interview_transcript"] = req.message
+            job.workflow_data = workflow_data
+            db.commit()
+        elif workflow_data.get("pending_interview_transcript"):
+            req.message = workflow_data["pending_interview_transcript"]
         
     # Heuristic: If user pastes a long text with JD keywords, update jd_content and invalidate caches
     if job and not req.is_system_trigger and len(req.message) > 50 and any(kw in req.message for kw in ["岗位", "职位", "任职", "要求", "职责"]):
@@ -856,7 +942,8 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                     card_content = "面试预测题已生成完毕"
                     card_data = {"preview": json.dumps(prep_res, ensure_ascii=False), "file_name": "interview_prep.json", "progress": 100, "sidebar_summary": "Generation summary", "round_id": req.round_id}
                 else:
-                    card_content = f"Offer stage error: {result['error']}"
+                    error_detail = result.get("error_message") or result.get("error_code") or "未知错误"
+                    card_content = f"Error: 面试题生成失败：{error_detail}"
                     card_data = {}
             else:
                 card_content = "Task completed."
@@ -874,18 +961,39 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
                 # 1. Evaluate Interview
-                eval_result = await SkillExecutor.execute_interview_eval(job, req.message, db, round_id=req.round_id)
+                eval_task = asyncio.create_task(
+                    SkillExecutor.execute_interview_eval(job, req.message, db, round_id=req.round_id)
+                )
+                elapsed_seconds = 0
+                eval_result = None
+                while elapsed_seconds < 300:
+                    try:
+                        eval_result = await asyncio.wait_for(asyncio.shield(eval_task), timeout=10)
+                        break
+                    except asyncio.TimeoutError:
+                        elapsed_seconds += 10
+                        yield f"data: {json.dumps({'type': 'progress', 'content': f'正在分析逐字稿（已用时 {elapsed_seconds} 秒）', 'data': {'steps': ['提取问答结构', '评估回答质量', '生成改进建议']}})}\n\n"
+
+                if eval_result is None:
+                    eval_task.cancel()
+                    eval_result = {
+                        "status": "error",
+                        "error_code": "INTERVIEW_EVALUATION_TIMEOUT",
+                        "error_message": "逐字稿分析超过 5 分钟，请缩短文本后重试",
+                    }
                 db.commit()
                 
                 if "error" in eval_result or eval_result.get("status") == "error":
-                    error_msg = eval_result.get("error") or eval_result.get("message") or "Unknown evaluation error"
+                    error_msg = eval_result.get("error_message") or eval_result.get("error_code") or "Unknown evaluation error"
                     card_content = f"Error: {error_msg}"
                     card_data = {}
                 else:
-                    # 2. Reflect and Update Memory
-                    ref_result = await SkillExecutor.execute_reflection(job, db)
+                    # Return the evaluation immediately; memory reflection runs independently.
+                    workflow_data = dict(job.workflow_data) if job.workflow_data else {}
+                    workflow_data.pop("pending_interview_transcript", None)
+                    job.workflow_data = workflow_data
                     db.commit()
-                    
+                    asyncio.create_task(run_reflection_background(job.id))
                     eval_res = eval_result.get("result", {}).get("interview_evaluation_result", {})
                     card_content = "面试评估及复盘已完成"
                     card_data = {"preview": json.dumps(eval_res, ensure_ascii=False), "file_name": "evaluation.json", "progress": 100, "sidebar_summary": "Generation summary", "round_id": req.round_id}

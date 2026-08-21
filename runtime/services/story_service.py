@@ -4,6 +4,7 @@ import re
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 from runtime.api import models
+from runtime.services.resume_parser_service import normalize_resume_schema
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 API_KEY = os.getenv("DEEPSEEK_API_KEY")
@@ -46,9 +47,7 @@ class StoryService:
 
         client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
         try:
-            resume_text = profile.base_resume
-            if isinstance(resume_text, dict):
-                resume_text = json.dumps(resume_text, ensure_ascii=False)
+            resume_text = json.dumps(normalize_resume_schema(profile.base_resume), ensure_ascii=False)
                 
             response = await client.chat.completions.create(
                 model=MODEL_NAME,
