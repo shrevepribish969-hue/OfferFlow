@@ -49,6 +49,16 @@ app.add_middleware(
 @app.get("/api/jobs")
 def get_jobs(db: Session = Depends(get_db)):
     jobs = db.query(models.JobCase).order_by(models.JobCase.updated_at.desc()).all()
+    # Older promoted leads kept the original URL on JobLead, so expose it
+    # through workflow_data without requiring a destructive database migration.
+    lead_links = {
+        lead.promoted_job_case_id: lead.source_url
+        for lead in db.query(models.JobLead).filter(models.JobLead.promoted_job_case_id.isnot(None)).all()
+        if lead.source_url
+    }
+    for job in jobs:
+        if lead_links.get(job.id) and not (job.workflow_data or {}).get("source_url"):
+            job.workflow_data = {**(job.workflow_data or {}), "source_url": lead_links[job.id]}
     return jobs
 
 @app.get("/api/export")
@@ -322,7 +332,14 @@ async def create_job(job: JobCreate, db: Session = Depends(get_db)):
 
 @app.get("/api/jobs/{job_id}")
 def get_job(job_id: int, db: Session = Depends(get_db)):
-    return db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+    job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if not (job.workflow_data or {}).get("source_url"):
+        lead = db.query(models.JobLead).filter(models.JobLead.promoted_job_case_id == job_id).first()
+        if lead and lead.source_url:
+            job.workflow_data = {**(job.workflow_data or {}), "source_url": lead.source_url}
+    return job
 
 @app.delete("/api/jobs/{job_id}")
 def delete_job(job_id: int, db: Session = Depends(get_db)):

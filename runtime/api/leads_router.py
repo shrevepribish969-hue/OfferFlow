@@ -99,7 +99,8 @@ def promote_lead(lead_id: int, req: PromoteRequest, db: Session = Depends(get_db
         role=req.role or lead.role or "未知岗位",
         jd_content=lead.jd_content,
         match_score=lead.match_score,
-        status="简历优化中"
+        status="简历优化中",
+        workflow_data={"source_url": lead.source_url} if lead.source_url else {}
     )
     db.add(new_job)
     db.commit()
