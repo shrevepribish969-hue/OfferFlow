@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Save, Loader2, FileText, User, Eye, Code } from "lucide-react";
+import { Save, Loader2, FileText, User, Eye, Code, Database, Upload, ShieldCheck } from "lucide-react";
 import { ResumeViewer, ResumeData } from "@/components/ResumeViewer";
 
 export default function SettingsPage() {
@@ -9,9 +9,12 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isImportingDatabase, setIsImportingDatabase] = useState(false);
   const [message, setMessage] = useState("");
+  const [databaseMessage, setDatabaseMessage] = useState("");
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('preview');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const databaseInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -93,6 +96,40 @@ export default function SettingsPage() {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setTimeout(() => setMessage(""), 4000);
+    }
+  };
+
+  const handleDatabaseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const confirmed = window.confirm(
+      "仅可导入到空的云端数据库。导入过程中请勿关闭页面，是否继续？"
+    );
+    if (!confirmed) {
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setIsImportingDatabase(true);
+      setDatabaseMessage("正在加密上传并校验数据库，请稍候...");
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/backend-api/admin/import_sqlite", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.detail || "数据库导入失败");
+      }
+      setDatabaseMessage(`导入成功：共 ${data.total ?? 0} 条记录。刷新页面后即可使用。`);
+    } catch (error) {
+      setDatabaseMessage(error instanceof Error ? error.message : "数据库导入失败");
+    } finally {
+      setIsImportingDatabase(false);
+      if (databaseInputRef.current) databaseInputRef.current.value = "";
     }
   };
   return (
@@ -182,6 +219,49 @@ export default function SettingsPage() {
             )}
           </div>
         )}
+      </div>
+
+      <div className="bg-white border border-border rounded-xl shadow-sm p-6 mt-6">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <Database className="w-5 h-5 text-indigo-500" />
+              <h2 className="text-lg font-bold">迁移本地数据库</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+              选择本地 <code className="font-mono">offerflow.db</code>，通过 HTTPS 导入当前云端数据库。
+              仅支持空库，任何校验失败都会整体回滚。
+            </p>
+            <div className="flex items-center gap-2 text-xs text-emerald-700 mt-3">
+              <ShieldCheck className="w-4 h-4" />
+              无需填写数据库地址；文件大小上限 15 MB。
+            </div>
+            {databaseMessage && (
+              <p className="text-sm font-medium mt-3 text-slate-700">{databaseMessage}</p>
+            )}
+          </div>
+          <div className="shrink-0">
+            <input
+              type="file"
+              ref={databaseInputRef}
+              onChange={handleDatabaseUpload}
+              accept=".db,.sqlite,.sqlite3"
+              className="hidden"
+            />
+            <button
+              onClick={() => databaseInputRef.current?.click()}
+              disabled={isImportingDatabase}
+              className="bg-primary text-white px-5 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm"
+            >
+              {isImportingDatabase ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              {isImportingDatabase ? "正在导入..." : "上传 offerflow.db"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

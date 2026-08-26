@@ -9,6 +9,7 @@ import json
 import os
 import re
 import secrets
+import sqlite3
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
@@ -20,6 +21,11 @@ from ..services.resume_parser_service import (
     normalize_resume_schema,
     parse_resume_to_json,
     quality_check_resume,
+)
+from ..services.sqlite_import_service import (
+    MAX_SQLITE_UPLOAD_BYTES,
+    SQLiteImportError,
+    import_sqlite_bytes,
 )
 
 from pydantic import BaseModel
@@ -185,14 +191,39 @@ def export_local(db: Session = Depends(get_db)):
         
     return {"status": "success", "file_path": filepath}
 
+
+@app.post("/api/admin/import_sqlite")
+async def import_sqlite_database(
+    file: UploadFile = File(...), db: Session = Depends(get_db)
+):
+    filename = (file.filename or "").lower()
+    if not filename.endswith((".db", ".sqlite", ".sqlite3")):
+        raise HTTPException(status_code=400, detail="请选择 .db、.sqlite 或 .sqlite3 文件")
+
+    payload = await file.read(MAX_SQLITE_UPLOAD_BYTES + 1)
+    await file.close()
+    if len(payload) > MAX_SQLITE_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="数据库文件不能超过 15 MB")
+
+    try:
+        counts = import_sqlite_bytes(db, payload)
+    except SQLiteImportError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except sqlite3.Error as exc:
+        raise HTTPException(status_code=400, detail="SQLite 数据库损坏或无法读取") from exc
+
+    return {
+        "status": "success",
+        "message": "数据库导入成功，所有表均已校验",
+        "counts": counts,
+        "total": sum(counts.values()),
+    }
+
 @app.get("/api/user/profile")
 def get_profile(db: Session = Depends(get_db)):
     profile = db.query(models.UserProfile).first()
     if not profile:
-        profile = models.UserProfile(base_resume="")
-        db.add(profile)
-        db.commit()
-        db.refresh(profile)
+        return {"base_resume": ""}
     if not profile.base_resume:
         return {"base_resume": ""}
     try:

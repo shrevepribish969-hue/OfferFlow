@@ -6,6 +6,11 @@ const backendUrl = /^https?:\/\//i.test(configuredBackend)
   : `http://${configuredBackend.replace(/\/$/, "")}`;
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // The authenticated proxy buffers request bodies. Keep this above the
+    // backend's guarded 15 MB SQLite import limit so uploads are not truncated.
+    proxyClientMaxBodySize: "16mb",
+  },
   async rewrites() {
     return [
       {

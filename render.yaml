@@ -33,10 +33,7 @@ services:
     envVars:
       - fromGroup: offerflow-auth
       - key: BACKEND_URL
-        fromService:
-          type: web
-          name: offerflow-api
-          property: hostport
+        value: https://offerflow-api-09p1.onrender.com
       - key: NODE_VERSION
         value: 22.18.0
 

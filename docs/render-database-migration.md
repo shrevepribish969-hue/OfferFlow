@@ -1,7 +1,15 @@
 # 将本地 OfferFlow 数据迁移到 Render
 
-迁移工具会把项目根目录的 `offerflow.db` 复制到 Render PostgreSQL。它不会上传
-SQLite 文件，也不会把数据库地址写入文件或 GitHub。
+推荐直接在 OfferFlow 的 **设置 → 迁移本地数据库** 中选择 `offerflow.db`。
+文件通过当前网站的 HTTPS 和登录验证上传，不需要开放 PostgreSQL 外部访问，
+也不需要复制数据库地址。
+
+网页导入只接受 `.db`、`.sqlite` 和 `.sqlite3`，文件上限为 15 MB。云端只要已有
+业务数据就会拒绝导入；任何错误都会让整个数据库事务回滚。导入成功后即可删除
+Render 中为旧迁移方式添加的 `temporary-migration` IP 规则。
+
+下面的命令行工具保留为备用方案。它会把项目根目录的 `offerflow.db` 复制到
+Render PostgreSQL，不会上传 SQLite 文件，也不会把数据库地址写入文件或 GitHub。
 
 ## 迁移前
 
