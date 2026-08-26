@@ -27,6 +27,11 @@ from ..services.sqlite_import_service import (
     SQLiteImportError,
     import_sqlite_bytes,
 )
+from ..services.agent_orchestrator import (
+    execution_intro,
+    infer_explicit_workflow,
+    missing_context_reply,
+)
 
 from pydantic import BaseModel
 
@@ -872,7 +877,7 @@ class AgentBrain:
         except Exception as e:
             return {
                 "intent": "GUIDE",
-                "reply": f"Thank you for your message! I have reviewed the JD.",
+                "reply": "我理解你的目标了。你可以直接告诉我想完成的任务，我会选择合适的 Agent；如果信息不足，我只会追问最关键的一项。",
                 "workflow": None,
                 "missing_context": []
             }
@@ -931,21 +936,66 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         req.system_workflow = "Reflection"
         req.is_system_trigger = True
 
+    if not req.system_workflow and not req.is_system_trigger:
+        req.system_workflow = infer_explicit_workflow(req.message)
+
     if req.system_workflow:
         intent = "EXECUTE"
         workflow = req.system_workflow
-        reply = ""
+        workflow_data = job.workflow_data if job and job.workflow_data else {}
+        reply = execution_intro(
+            workflow,
+            {
+                "has_jd_analysis": bool(workflow_data.get("jd_analysis_result")),
+                "has_job_matching": bool(workflow_data.get("job_matching_result")),
+                "has_base_resume": has_base_resume,
+            },
+        )
     else:
         # Process with AgentBrain, pass context
+        recent_messages = db.query(models.ChatMessage).filter(
+            models.ChatMessage.job_case_id == job_id
+        ).order_by(models.ChatMessage.created_at.desc()).limit(8).all()
         brain_context = {
             "has_base_resume": has_base_resume,
             "has_jd_content": bool(job and job.jd_content),
-            "past_workflow_results": job.workflow_data if job else {}
+            "past_workflow_results": job.workflow_data if job else {},
+            "recent_conversation": [
+                {"role": item.role, "content": item.content[:1200]}
+                for item in reversed(recent_messages)
+                if not (item.role == "agent" and item.content.startswith('{"card"'))
+            ],
         }
         brain_result = await AgentBrain.process(req.message, context=brain_context)
         intent = brain_result["intent"]
         reply = brain_result["reply"]
         workflow = brain_result["workflow"]
+        if intent == "EXECUTE" and workflow:
+            reply = reply or execution_intro(
+                workflow,
+                {
+                    "has_jd_analysis": bool((job.workflow_data or {}).get("jd_analysis_result")) if job else False,
+                    "has_job_matching": bool((job.workflow_data or {}).get("job_matching_result")) if job else False,
+                    "has_base_resume": has_base_resume,
+                },
+            )
+
+    if intent == "EXECUTE" and not workflow:
+        intent = "GUIDE"
+        reply = reply or "我还不能确定要调用哪个 Agent。你希望我分析岗位、优化简历、准备面试，还是生成投递话术？"
+
+    if intent == "EXECUTE" and workflow:
+        missing_reply = missing_context_reply(
+            workflow,
+            {
+                "has_base_resume": has_base_resume,
+                "has_jd_content": bool(job and job.jd_content),
+            },
+        )
+        if missing_reply:
+            intent = "GUIDE"
+            workflow = None
+            reply = missing_reply
 
     # Preserve long transcripts before starting the streaming/model request so
     # an interrupted browser connection never destroys the user's input.
@@ -973,8 +1023,11 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
 
         # --- State 1: GUIDE (Interaction & Clarification) ---
         if intent == "GUIDE":
-            suggestions = ["分析新岗位", "生成打招呼语"]
+            suggestions = ["直接优化简历", "分析岗位要求", "生成投递话术", "准备面试"]
             yield f"data: {json.dumps({'type': 'text', 'content': reply, 'data': {'suggestions': suggestions}})}\n\n"
+            if reply:
+                db.add(models.ChatMessage(job_case_id=job_id, role="agent", content=reply))
+                db.commit()
             return
 
         suggestions = []
@@ -989,6 +1042,11 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             return
 
         agent_name = agent.name
+        conversational_intro = reply or execution_intro(workflow, {})
+        if conversational_intro:
+            yield f"data: {json.dumps({'type': 'text', 'content': conversational_intro, 'data': {'phase': 'plan', 'workflow': workflow, 'agent': agent_name}})}\n\n"
+            db.add(models.ChatMessage(job_case_id=job_id, role="agent", content=conversational_intro))
+            db.commit()
         ai_run = start_ai_run(db, job_id, workflow, agent_name, req.message or "")
 
         if workflow == "ResumeOptimization":

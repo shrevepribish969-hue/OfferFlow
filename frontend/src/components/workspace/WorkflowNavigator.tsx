@@ -21,8 +21,8 @@ export const WorkflowNavigator = ({
         <div className="hidden xl:flex items-center gap-2 shrink-0 pr-4 border-r border-slate-200">
           <Sparkles className="w-4 h-4 text-indigo-600" />
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Agent plan</div>
-            <div className="text-xs font-semibold text-slate-700">{completedCount}/{stages.length} 已完成</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Agent capabilities</div>
+            <div className="text-xs font-semibold text-slate-700">{completedCount} 个成果已生成</div>
           </div>
         </div>
 

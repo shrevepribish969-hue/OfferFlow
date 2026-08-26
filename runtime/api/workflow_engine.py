@@ -368,6 +368,14 @@ class SkillExecutor:
     async def execute_interview_prep(job: models.JobCase, db_session, user_input: str = "", round_id: str = None) -> dict:
         w_data = job.workflow_data or {}
         jd_result = w_data.get("jd_analysis_result", {})
+        if not jd_result and job.jd_content:
+            jd_response = await SkillExecutor.execute_jd_analysis(job, db_session)
+            if jd_response.get("status") == "error":
+                return SkillExecutor._format_error(
+                    "interview_prep", "5.7", "PRECONDITION_FAILED", "后台提取 JD 关键信息失败"
+                )
+            w_data = job.workflow_data or {}
+            jd_result = w_data.get("jd_analysis_result", {})
         
         # 1. Retrieve real interview examples. These calibrate wording and
         # follow-up style; they no longer define the interview coverage.
@@ -596,8 +604,17 @@ class SkillExecutor:
         system_prompt = load_prompt("260713Prompt_Job_Matching.md")
         
         w_data = dict(job.workflow_data) if job.workflow_data else {}
-        # Fetch jd_analysis_result if available, else fallback to raw text (for backwards compatibility if needed)
+        # Silently derive the prerequisite context when the user requests
+        # matching directly. This does not create an extra visible artifact.
         jd_analysis = w_data.get("jd_analysis_result", {})
+        if not jd_analysis and job.jd_content:
+            jd_response = await SkillExecutor.execute_jd_analysis(job, db_session)
+            if jd_response.get("status") == "error":
+                return SkillExecutor._format_error(
+                    "job_matching", "1.0", "PRECONDITION_FAILED", "后台提取 JD 关键信息失败"
+                )
+            w_data = dict(job.workflow_data) if job.workflow_data else {}
+            jd_analysis = w_data.get("jd_analysis_result", {})
         
         # Prepare payload according to the new prompt requirements
         import json

@@ -121,11 +121,18 @@ export const AiCopilotSidebar = ({
   onOpenCanvas,
 }: AiCopilotSidebarProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const positionedWelcomeRef = useRef(false);
   const [showReason, setShowReason] = useState(false);
   const [feedbackByMessage, setFeedbackByMessage] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<"chat" | "logs">("chat");
 
   useEffect(() => {
+    if (messages[0]?.id === "case-agent-welcome" && !positionedWelcomeRef.current) {
+      positionedWelcomeRef.current = true;
+      messagesContainerRef.current?.scrollTo({ top: 0 });
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -559,7 +566,7 @@ export const AiCopilotSidebar = ({
           )}
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-4 bg-slate-50/30">
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 bg-slate-50/30">
           {messages.map((msg, idx) => renderMessage(msg, idx))}
           <div ref={messagesEndRef} />
         </div>

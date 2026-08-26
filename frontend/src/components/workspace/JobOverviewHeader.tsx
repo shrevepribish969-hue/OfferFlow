@@ -29,7 +29,7 @@ export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, onTogg
                 匹配度 {job?.match_score != null ? `${job.match_score}%` : "--"}
               </span>
               <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[11px] font-bold tracking-wide border border-blue-100">
-                当前阶段: {currentStageLabel || job?.status || "准备中"}
+                当前查看: {currentStageLabel || "自由对话"}
               </span>
             </div>
           </div>

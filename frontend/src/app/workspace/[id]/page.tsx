@@ -64,9 +64,14 @@ export default function WorkspaceV3() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [activeStageId, setActiveStageId] = useState<string>("jd");
-  const [shouldAutoAnalyze, setShouldAutoAnalyze] = useState(false);
-  const [suggestedActions, setSuggestedActions] = useState<string[]>([]);
+  const [activeStageId, setActiveStageId] = useState<string>("");
+  const [chatLoaded, setChatLoaded] = useState(false);
+  const [suggestedActions, setSuggestedActions] = useState<string[]>([
+    "直接优化简历",
+    "分析岗位要求",
+    "生成投递话术",
+    "准备面试",
+  ]);
   const [completedStageIds, setCompletedStageIds] = useState<string[]>([]);
   const [dismissedRecommendationKey, setDismissedRecommendationKey] = useState<string | null>(null);
   const [feedbackEvents, setFeedbackEvents] = useState<FeedbackEvent[]>([]);
@@ -126,17 +131,32 @@ export default function WorkspaceV3() {
               return { id: msg.id.toString(), role: "user", type: "text", content: msg.content };
             });
             setMessages(parsedMessages);
-          } else {
-            // New job case, trigger initial analysis (silently in background)
-            setShouldAutoAnalyze(true);
           }
+          setChatLoaded(true);
         })
-        .catch((err) => console.error(err));
+        .catch((err) => {
+          console.error(err);
+          setChatLoaded(true);
+        });
 
       fetchFeedbackEvents(params.id as string);
       fetchAiRuns(params.id as string);
     }
   }, [params]);
+
+  useEffect(() => {
+    if (!chatLoaded || !job) return;
+    const hasConversationalAgentMessage = messages.some(
+      (message) => message.role === "agent" && message.type === "text" && !message.is_system_hidden
+    );
+    if (hasConversationalAgentMessage) return;
+    setMessages((previous) => [{
+      id: "case-agent-welcome",
+      role: "agent",
+      type: "text",
+      content: `我们来处理 ${job.company || "这个公司"} · ${job.role || "这个岗位"}。${job.jd_content ? "我已经读取了岗位信息。" : "目前还没有完整 JD。"}\n\n你想先做什么？你可以直接说“这个岗位我一定会投，跳过匹配，直接优化简历”，也可以让我分析岗位、准备面试或生成投递话术。流程不是固定的，我会根据你的目标调用合适的 Agent。`,
+    }, ...previous]);
+  }, [chatLoaded, job, messages.length]);
 
   // Derived Workflow Stages based on messages/job progress & user completions
   const isStageDone = (id: string) => {
@@ -174,48 +194,6 @@ export default function WorkspaceV3() {
 
   const activeStageObj = stages.find(s => s.id === activeStageId);
 
-  // Auto-update suggestions based on active stage
-  useEffect(() => {
-    switch (activeStageId) {
-      case "jd":
-        setSuggestedActions(["重新解析JD核心要求", "提取最重要的3个技能", "去匹配我的简历"]);
-        break;
-      case "match":
-        setSuggestedActions(["为什么匹配度是这个分数？", "我欠缺哪些核心经验？", "去优化简历"]);
-        break;
-      case "resume":
-        setSuggestedActions(["帮我把第二段经历写得更精简", "突出我的AI项目经验", "生成打招呼语"]);
-        break;
-      case "predict":
-        setSuggestedActions(["预测一下可能的连环追问", "帮我用STAR法则重新梳理第一题", "模拟面试"]);
-        break;
-      default:
-        setSuggestedActions(["帮我整理下当前进度", "下一步我该做什么？"]);
-        break;
-    }
-  }, [activeStageId]);
-
-  // Trigger auto analysis when job is loaded and shouldAutoAnalyze is true
-  useEffect(() => {
-    if (job && shouldAutoAnalyze) {
-      setShouldAutoAnalyze(false);
-      handleSendText("", true, "JDAnalysis");
-    }
-  }, [job, shouldAutoAnalyze]);
-
-  // Auto-trigger JobMatching when entering the match stage if not already done
-  useEffect(() => {
-    if (activeStageId === "match" && job && !isSending) {
-      const matchCards = messages.filter(m => m.card_type === "MatchAnalysis");
-      const latestAgentRun = messages.slice().reverse().find(m => m.type === "agent_run");
-      const isCurrentlyProcessing = latestAgentRun ? !latestAgentRun.is_completed : false;
-      
-      if (matchCards.length === 0 && !isCurrentlyProcessing) {
-        handleSendText("", true, "JobMatching");
-      }
-    }
-  }, [activeStageId, messages, job, isSending]);
-
   // Handle message sending (stream processing omitted for brevity, keeping structure similar)
   const handleSendText = async (textToSubmit: string, isSystemTrigger = false, systemWorkflow?: string, roundId?: string) => {
     if ((!textToSubmit.trim() && !isSystemTrigger) || isSending || !job) return;
@@ -228,24 +206,6 @@ export default function WorkspaceV3() {
       setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", type: "text", content: textToSubmit }]);
     }
     setIsSending(true);
-
-    const localRunId = `local-run-${Date.now()}`;
-    const workflowStatus: Record<string, string> = {
-      InterviewPrep: "正在生成面试预测题…",
-      InterviewEvaluation: "正在分析面试复盘…",
-      JDAnalysis: "正在分析岗位要求…",
-      JobMatching: "正在计算岗位匹配度…",
-      ResumeOptimization: "正在生成简历优化建议…",
-      ContentGeneration: "正在生成简历内容…",
-    };
-    setMessages((prev) => [...prev, {
-      id: localRunId,
-      role: "agent",
-      type: "agent_run",
-      main_status: workflowStatus[systemWorkflow || ""] || "正在处理…",
-      steps: [],
-      is_completed: false,
-    }]);
 
     const requestController = new AbortController();
     const requestTimeoutMs = systemWorkflow === "InterviewEvaluation" ? 330000 : 150000;
@@ -279,17 +239,20 @@ export default function WorkspaceV3() {
           for (const line of lines) {
             if (line.startsWith("data: ")) {
               const data = JSON.parse(line.slice(6));
+              if (Array.isArray(data.data?.suggestions) && data.data.suggestions.length > 0) {
+                setSuggestedActions(data.data.suggestions);
+              }
               setMessages((prev) => {
                 const newMessages = [...prev];
                 if (data.type === "text" || data.type === "card") {
                   newMessages.push({
                     id: Date.now().toString() + Math.random(),
                     role: "agent", type: data.type, content: data.content, card_type: data.card_type, data: data.data,
-                    is_system_hidden: isSystemTrigger && data.type === "text"
+                    is_system_hidden: false
                   });
                   if (data.type === "card" && job) {
                     fetchAiRuns(job.id);
-                    setIsCanvasOpen(true);
+                    handleOpenCanvasForCard(data.card_type, data.data);
                   }
                   // mark last run complete
                   for (let i = newMessages.length - 2; i >= 0; i--) {
@@ -333,10 +296,7 @@ export default function WorkspaceV3() {
         ? "生成超时，请点击“重新预测”再试一次。"
         : `生成失败：${error instanceof Error ? error.message : "未知错误"}`;
       setMessages((prev) => {
-        const updated = prev.map((message) => message.id === localRunId
-          ? { ...message, main_status: "生成失败", is_completed: true }
-          : message);
-        return [...updated, {
+        return [...prev, {
           id: `error-${Date.now()}`,
           role: "agent",
           type: "text",
@@ -354,9 +314,9 @@ export default function WorkspaceV3() {
   }
 
   // Handlers for Workspace View buttons
-  const handleStageComplete = (nextStageId: string) => {
+  const handleStageComplete = (_nextStageId: string) => {
     setCompletedStageIds((prev) => Array.from(new Set([...prev, activeStageId])));
-    setActiveStageId(nextStageId);
+    setIsCanvasOpen(false);
   };
 
   const handleStageSelect = (stageId: string) => {
@@ -699,7 +659,7 @@ export default function WorkspaceV3() {
             isSending={isSending}
             onSend={(text) => handleSendText(text)}
             suggestedActions={suggestedActions}
-            nextBestAction={visibleNextBestAction}
+            nextBestAction={null}
             onRunNextAction={handleRunNextBestAction}
             onDismissNextAction={() => visibleNextBestAction && setDismissedRecommendationKey(visibleNextBestAction.key)}
             feedbackEvents={feedbackEvents}
