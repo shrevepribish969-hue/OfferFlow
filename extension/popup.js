@@ -97,7 +97,7 @@ clipBtn.addEventListener('click', async () => {
     if (!jdText || jdText.length < 50) {
       throw new Error('页面文字太少，请选中 JD 文本后重试');
     }
-    const response = await fetch('http://localhost:8001/api/leads/clip', {
+    const response = await fetch('http://localhost:8000/api/leads/clip', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ source_url: tab.url, jd_content: jdText.slice(0, 10000) })

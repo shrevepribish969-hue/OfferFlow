@@ -1,12 +1,14 @@
-from fastapi import FastAPI, Depends, UploadFile, File, HTTPException
+from fastapi import FastAPI, Depends, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import uvicorn
 import asyncio
+import base64
 import json
 import os
 import re
+import secrets
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
@@ -38,13 +40,61 @@ app = FastAPI()
 
 app.include_router(leads_router, prefix="/api/leads", tags=["leads"])
 
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"], # For development
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _has_valid_basic_auth(request: Request) -> bool:
+    expected_password = os.getenv("APP_PASSWORD", "")
+    if not expected_password:
+        # Local development remains password-free. Render deployments fail
+        # closed if the shared secret was not provisioned.
+        return not os.getenv("RENDER")
+
+    authorization = request.headers.get("authorization", "")
+    if not authorization.startswith("Basic "):
+        return False
+    try:
+        decoded = base64.b64decode(authorization[6:]).decode("utf-8")
+        username, password = decoded.split(":", 1)
+    except (ValueError, UnicodeDecodeError):
+        return False
+
+    expected_username = os.getenv("APP_USERNAME", "offerflow")
+    return secrets.compare_digest(username, expected_username) and secrets.compare_digest(
+        password, expected_password
+    )
+
+
+@app.middleware("http")
+async def require_personal_access(request: Request, call_next):
+    if request.url.path == "/health" or request.method == "OPTIONS":
+        return await call_next(request)
+    if not _has_valid_basic_auth(request):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Authentication required"},
+            headers={"WWW-Authenticate": 'Basic realm="OfferFlow"'},
+        )
+    return await call_next(request)
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 @app.get("/api/jobs")
 def get_jobs(db: Session = Depends(get_db)):
@@ -1280,5 +1330,10 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 if __name__ == "__main__":
-    uvicorn.run("runtime.api.api_server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "runtime.api.api_server:app",
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "8000")),
+        reload=not bool(os.getenv("RENDER")),
+    )
 

@@ -202,9 +202,9 @@ export const ResumeViewer: React.FC<ResumeViewerProps> = ({ data }) => {
         )}
         {(personal_info?.job_intention || personal_info?.availability || (personal_info?.preferred_locations?.length || 0) > 0) && (
           <p className="text-[11px] mt-1 text-gray-800">
-            {personal_info.job_intention && <span>求职意向：{personal_info.job_intention}</span>}
-            {personal_info.availability && <span> | 到岗时间：{personal_info.availability}</span>}
-            {(personal_info.preferred_locations?.length || 0) > 0 && <span> | 期望地点：{personal_info.preferred_locations?.join(" / ")}</span>}
+            {personal_info?.job_intention && <span>求职意向：{personal_info.job_intention}</span>}
+            {personal_info?.availability && <span> | 到岗时间：{personal_info.availability}</span>}
+            {(personal_info?.preferred_locations?.length || 0) > 0 && <span> | 期望地点：{personal_info?.preferred_locations?.join(" / ")}</span>}
           </p>
         )}
       </div>
