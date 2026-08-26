@@ -142,7 +142,9 @@ export const AiCopilotSidebar = ({
 
   const handleSend = () => {
     if (!input.trim() || isSending) return;
-    onSend(input);
+    const message = input.trim();
+    setInput("");
+    onSend(message);
   };
 
   const getMessageKey = (msg: any, idx: number) => msg.id || `${msg.card_type || msg.type || msg.role}-${idx}`;
@@ -421,6 +423,7 @@ export const AiCopilotSidebar = ({
       if (msg.card_type === "ResumeOptimizer") stageName = "简历优化";
       if (msg.card_type === "InterviewPrep") stageName = "面试预测";
       if (msg.card_type === "InterviewEvaluation") stageName = "面试复盘";
+      if (msg.card_type === "ApplicationStatus") stageName = "投递记录";
       const isErrorCard = typeof msg.content === "string" && msg.content.startsWith("Error:");
       
       return (

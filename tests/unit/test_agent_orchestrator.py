@@ -1,9 +1,11 @@
 import unittest
+from datetime import datetime
 
 from runtime.services.agent_orchestrator import (
     execution_intro,
     infer_explicit_workflow,
     missing_context_reply,
+    parse_application_update,
 )
 
 
@@ -33,6 +35,14 @@ class AgentOrchestratorTests(unittest.TestCase):
         )
         self.assertIn("只缺一项", reply)
         self.assertIn("基础简历", reply)
+
+    def test_application_reminder_routes_and_parses_relative_dates(self):
+        message = "我在昨天进行了投递，帮我记录并且在明天提醒我检查进度"
+        self.assertEqual(infer_explicit_workflow(message), "UpdateJobCase")
+        update = parse_application_update(message, datetime(2026, 8, 27, 10, 0))
+        self.assertTrue(update["applied"])
+        self.assertEqual(update["apply_time"], "2026-08-26")
+        self.assertEqual(update["reminder_time"], "2026-08-28")
 
 
 if __name__ == "__main__":

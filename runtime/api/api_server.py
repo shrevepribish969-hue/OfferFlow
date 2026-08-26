@@ -31,6 +31,7 @@ from ..services.agent_orchestrator import (
     execution_intro,
     infer_explicit_workflow,
     missing_context_reply,
+    parse_application_update,
 )
 
 from pydantic import BaseModel
@@ -1322,16 +1323,52 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             steps = []
             dev_logs = []
         elif workflow == "UpdateJobCase":
-            main_title = "Creating Job Case..."
-            steps = ["分析JD", "Create workflow", "Track offer"]
-            dev_logs = [brain_log, "Database: Updating status to OFFER"]
+            main_title = "正在更新投递记录..."
+            steps = ["识别投递时间", "设置跟进提醒", "更新求职日程"]
+            dev_logs = [brain_log, "Database: Updating application status"]
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
-                job.status = "Offer received"
+                from datetime import datetime
+                from zoneinfo import ZoneInfo
+
+                update = parse_application_update(
+                    req.message,
+                    datetime.now(ZoneInfo(os.getenv("APP_TIMEZONE", "Asia/Shanghai"))),
+                )
+                workflow_data = dict(job.workflow_data) if job.workflow_data else {}
+                existing = workflow_data.get("apply_status") or {}
+                apply_status = {
+                    "applied": update["applied"] or bool(existing.get("applied")),
+                    "link": update["link"] or existing.get("link", ""),
+                    "apply_time": update["apply_time"] or existing.get("apply_time", ""),
+                    "reminder_time": update["reminder_time"] or existing.get("reminder_time", ""),
+                }
+                workflow_data["apply_status"] = apply_status
+                job.workflow_data = workflow_data
+                if apply_status["applied"]:
+                    job.status = "已投递"
+                db.add(models.TimelineEvent(
+                    job_case_id=job.id,
+                    event_type="ApplicationStatusUpdated",
+                    event_data=apply_status,
+                ))
                 db.commit()
-            card_type = "ExecutionSummary"
-            card_content = "Offer received via direct application"
-            card_data = {"actions_taken": ["Job Case created"], "sidebar_summary": "Job Case created successfully."}
+                summary_parts = ["投递状态已记录"]
+                if apply_status["apply_time"]:
+                    summary_parts.append(f"投递日期：{apply_status['apply_time']}")
+                if apply_status["reminder_time"]:
+                    summary_parts.append(f"跟进提醒：{apply_status['reminder_time']}")
+                card_content = "；".join(summary_parts)
+                card_data = {
+                    "apply_status": apply_status,
+                    "sidebar_summary": card_content,
+                    "suggestions": ["查看投递记录", "修改提醒时间", "准备面试"],
+                }
+                suggestions = card_data["suggestions"]
+            else:
+                card_content = "Error: Job Case 不存在"
+                card_data = {}
+            card_type = "ApplicationStatus"
         else:
             # Fallback if workflow is unknown but execute was triggered
             fallback_reply = f"Processing: {workflow or 'unknown'}"

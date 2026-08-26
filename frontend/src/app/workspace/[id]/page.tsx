@@ -331,6 +331,7 @@ export default function WorkspaceV3() {
       MatchAnalysis: "match",
       ResumeOptimizer: "resume",
       ContentGeneration: "resume",
+      ApplicationStatus: "apply",
       InterviewPrep: data?.round_id === "2" ? "interview_2" : data?.round_id === "hr" ? "interview_hr" : "interview_1",
       InterviewEvaluation: data?.round_id === "2" ? "interview_2" : data?.round_id === "hr" ? "interview_hr" : "interview_1",
     };

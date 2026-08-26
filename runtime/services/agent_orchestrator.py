@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timedelta
 
 
 WORKFLOW_LABELS = {
@@ -14,6 +15,7 @@ WORKFLOW_LABELS = {
     "InterviewEvaluation": "面试复盘 Agent",
     "GreetingGeneration": "沟通话术 Agent",
     "Reflection": "复盘记忆 Agent",
+    "UpdateJobCase": "求职进度 Agent",
 }
 
 
@@ -39,6 +41,7 @@ def infer_explicit_workflow(message: str) -> str | None:
         ("JobMatching", ("匹配度分析", "分析匹配度", "计算匹配度", "评估匹配", "匹配我的简历")),
         ("JDAnalysis", ("分析jd", "解析jd", "分析岗位", "提取岗位要求", "提取jd", "岗位分析")),
         ("Reflection", ("沉淀复盘", "写入记忆", "总结复盘")),
+        ("UpdateJobCase", ("记录投递", "已经投递", "已投递", "进行了投递", "提醒我检查进度", "提醒我跟进")),
     )
     for workflow, phrases in routes:
         if any(phrase in text for phrase in phrases):
@@ -69,6 +72,8 @@ def execution_intro(workflow: str, context: dict | None = None) -> str:
         return "好的，我会调用简历生成 Agent，把已确认的修改整理成最终版本。"
     if workflow == "InterviewEvaluation":
         return "明白，我会调用面试复盘 Agent 分析记录；结论会先给你确认，再决定是否沉淀为长期记忆。"
+    if workflow == "UpdateJobCase":
+        return "明白，我会调用求职进度 Agent 记录投递时间和跟进提醒，并把它加入你的任务日程。"
     return f"明白，我会调用{label}处理这项任务。"
 
 
@@ -92,3 +97,39 @@ def welcome_message(company: str | None, role: str | None, has_jd: bool) -> str:
         "- “直接准备一面”\n\n"
         "流程不是固定的，我会根据你的目标调用合适的 Agent。"
     )
+
+
+def parse_application_update(message: str, now: datetime | None = None) -> dict:
+    """Parse common application/reminder expressions without another model call."""
+    current = now or datetime.now()
+    text = message or ""
+
+    def relative_date(keyword: str, offset: int) -> str | None:
+        return (current.date() + timedelta(days=offset)).isoformat() if keyword in text else None
+
+    apply_time = (
+        relative_date("昨天", -1)
+        or relative_date("今天", 0)
+        or relative_date("前天", -2)
+    )
+    reminder_time = (
+        relative_date("后天", 2)
+        or relative_date("明天", 1)
+        or relative_date("今天提醒", 0)
+    )
+
+    dates = re.findall(r"(?<!\d)(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})日?", text)
+    normalized_dates = [f"{int(year):04d}-{int(month):02d}-{int(day):02d}" for year, month, day in dates]
+    if normalized_dates:
+        if any(marker in text for marker in ("投递", "申请")) and not apply_time:
+            apply_time = normalized_dates[0]
+        if any(marker in text for marker in ("提醒", "跟进", "检查进度")):
+            reminder_time = normalized_dates[-1]
+
+    url_match = re.search(r"https?://[^\s]+", text)
+    return {
+        "applied": any(marker in text for marker in ("投递", "申请了", "已申请")),
+        "link": url_match.group(0).rstrip("，。,.！!") if url_match else "",
+        "apply_time": apply_time or "",
+        "reminder_time": reminder_time or "",
+    }
