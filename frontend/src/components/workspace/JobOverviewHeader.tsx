@@ -1,25 +1,27 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, PanelRightClose, PanelRightOpen, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 interface JobOverviewHeaderProps {
   job: any;
   currentStageLabel?: string;
+  isCanvasOpen?: boolean;
+  onToggleCanvas?: () => void;
 }
 
-export const JobOverviewHeader = ({ job, currentStageLabel }: JobOverviewHeaderProps) => {
+export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, onToggleCanvas }: JobOverviewHeaderProps) => {
   return (
-    <header className="h-16 flex items-center justify-between px-6 border-b border-slate-200 shrink-0 bg-white z-10 shadow-sm relative">
+    <header className="h-16 flex items-center justify-between px-5 border-b border-slate-200 shrink-0 bg-white z-10 relative">
       <div className="flex items-center gap-4">
         <Link href="/" className="text-slate-400 hover:text-slate-700 transition-colors bg-slate-50 hover:bg-slate-100 p-2 rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 shadow-inner text-white font-bold text-sm">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 shadow-inner text-white font-bold text-sm">
             {job?.company?.substring(0, 2) || "💼"}
           </div>
           <div className="flex flex-col">
-            <h1 className="font-bold text-lg text-slate-800 leading-tight">
+            <h1 className="font-bold text-base text-slate-900 leading-tight">
               {job?.company || "未知公司"} · {job?.role || "未知岗位"}
             </h1>
             <div className="flex items-center gap-2 mt-0.5">
@@ -33,16 +35,18 @@ export const JobOverviewHeader = ({ job, currentStageLabel }: JobOverviewHeaderP
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-4 text-sm bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
-        <div className="flex flex-col text-right">
-          <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">预计面试</span>
-          <span className="font-bold text-slate-800">7月27日</span>
+      <div className="flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700">
+          <Sparkles className="w-3.5 h-3.5" />
+          Case Agent 在线
         </div>
-        <div className="h-8 w-[1px] bg-slate-200"></div>
-        <div className="flex flex-col">
-          <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">倒计时</span>
-          <span className="font-bold text-orange-600">5 天</span>
-        </div>
+        <button
+          onClick={onToggleCanvas}
+          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:border-indigo-200 hover:text-indigo-700 transition-colors"
+        >
+          {isCanvasOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
+          {isCanvasOpen ? "关闭 Canvas" : "打开 Canvas"}
+        </button>
       </div>
     </header>
   );

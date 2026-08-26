@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, PieChart, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Target, PieChart, AlertCircle, CheckCircle2, Loader2, ChevronDown } from 'lucide-react';
 
 interface JobMatchViewProps {
   job: any;
@@ -124,7 +124,15 @@ export const JobMatchView = ({ job, cardMsg, isProcessing, onComplete, onRegener
           </div>
 
           {/* Gaps and Matches */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <details className="group rounded-xl border border-slate-200 bg-white shadow-sm">
+            <summary className="list-none cursor-pointer px-5 py-4 flex items-center justify-between text-sm font-bold text-slate-800">
+              查看优势与能力差距
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-slate-400">{matchingSkills.length} 项优势 · {gapSkills.length} 项差距</span>
+                <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" />
+              </div>
+            </summary>
+            <div className="grid grid-cols-1 gap-5 border-t border-slate-100 p-5">
             
             {/* Matching Strengths */}
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
@@ -166,7 +174,8 @@ export const JobMatchView = ({ job, cardMsg, isProcessing, onComplete, onRegener
               </div>
             </div>
 
-          </div>
+            </div>
+          </details>
         </div>
       </div>
     </div>

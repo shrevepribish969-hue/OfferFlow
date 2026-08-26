@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { X, Sparkles } from "lucide-react";
 import { JobOverviewHeader } from "@/components/workspace/JobOverviewHeader";
-import { WorkflowSidebar, WorkflowStage, StageStatus } from "@/components/workspace/WorkflowSidebar";
+import { WorkflowStage } from "@/components/workspace/WorkflowSidebar";
+import { WorkflowNavigator } from "@/components/workspace/WorkflowNavigator";
 import { AiCopilotSidebar, NextBestAction } from "@/components/workspace/AiCopilotSidebar";
 import { ResumeWorkView } from "@/components/workspace/views/ResumeWorkView";
 import { JDAnalysisView } from "@/components/workspace/views/JDAnalysisView";
@@ -69,6 +71,7 @@ export default function WorkspaceV3() {
   const [dismissedRecommendationKey, setDismissedRecommendationKey] = useState<string | null>(null);
   const [feedbackEvents, setFeedbackEvents] = useState<FeedbackEvent[]>([]);
   const [aiRuns, setAiRuns] = useState<AIRun[]>([]);
+  const [isCanvasOpen, setIsCanvasOpen] = useState(false);
 
   const fetchFeedbackEvents = async (jobId: string | number) => {
     try {
@@ -286,6 +289,7 @@ export default function WorkspaceV3() {
                   });
                   if (data.type === "card" && job) {
                     fetchAiRuns(job.id);
+                    setIsCanvasOpen(true);
                   }
                   // mark last run complete
                   for (let i = newMessages.length - 2; i >= 0; i--) {
@@ -353,6 +357,27 @@ export default function WorkspaceV3() {
   const handleStageComplete = (nextStageId: string) => {
     setCompletedStageIds((prev) => Array.from(new Set([...prev, activeStageId])));
     setActiveStageId(nextStageId);
+  };
+
+  const handleStageSelect = (stageId: string) => {
+    setActiveStageId(stageId);
+    setIsCanvasOpen(true);
+  };
+
+  const handleOpenCanvasForCard = (cardType?: string, data?: any) => {
+    const stageByCard: Record<string, string> = {
+      ExecutionSummary: "jd",
+      JDAnalysis: "jd",
+      MatchAnalysis: "match",
+      ResumeOptimizer: "resume",
+      ContentGeneration: "resume",
+      InterviewPrep: data?.round_id === "2" ? "interview_2" : data?.round_id === "hr" ? "interview_hr" : "interview_1",
+      InterviewEvaluation: data?.round_id === "2" ? "interview_2" : data?.round_id === "hr" ? "interview_hr" : "interview_1",
+    };
+    if (cardType && stageByCard[cardType]) {
+      setActiveStageId(stageByCard[cardType]);
+    }
+    setIsCanvasOpen(true);
   };
 
   const handleRegenerate = (workflowName: string) => {
@@ -498,7 +523,10 @@ export default function WorkspaceV3() {
       setActiveStageId(visibleNextBestAction.stageId);
     }
     if (visibleNextBestAction.workflow) {
+      setIsCanvasOpen(false);
       handleSendText(visibleNextBestAction.message || "", true, visibleNextBestAction.workflow, visibleNextBestAction.roundId);
+    } else {
+      setIsCanvasOpen(true);
     }
   };
 
@@ -648,37 +676,64 @@ export default function WorkspaceV3() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-slate-100 overflow-hidden font-sans">
-      <JobOverviewHeader job={job} currentStageLabel={activeStageObj?.label} />
-      
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Workflow Navigator */}
-        <WorkflowSidebar 
-          stages={stages} 
-          activeStageId={activeStageId} 
-          onStageSelect={setActiveStageId} 
-        />
-        
-        {/* Center: Functional Workspace */}
-        <div className="flex-1 overflow-hidden relative shadow-[-10px_0_20px_rgba(0,0,0,0.03)] z-10 border-r border-slate-200">
-          {renderWorkspaceView()}
-        </div>
+    <div className="flex flex-col h-screen w-full bg-[#f4f5f8] overflow-hidden font-sans">
+      <JobOverviewHeader
+        job={job}
+        currentStageLabel={activeStageObj?.label}
+        isCanvasOpen={isCanvasOpen}
+        onToggleCanvas={() => setIsCanvasOpen((open) => !open)}
+      />
 
-        {/* Right: AI Copilot */}
-        <AiCopilotSidebar 
-          messages={messages}
-          input={input}
-          setInput={setInput}
-          isSending={isSending}
-          onSend={(text) => handleSendText(text)}
-          suggestedActions={suggestedActions}
-          nextBestAction={visibleNextBestAction}
-          onRunNextAction={handleRunNextBestAction}
-          onDismissNextAction={() => visibleNextBestAction && setDismissedRecommendationKey(visibleNextBestAction.key)}
-          feedbackEvents={feedbackEvents}
-          onSubmitFeedback={handleSubmitFeedback}
-          aiRuns={aiRuns}
-        />
+      <WorkflowNavigator
+        stages={stages}
+        activeStageId={activeStageId}
+        onStageSelect={handleStageSelect}
+      />
+
+      <div className="flex-1 flex gap-3 overflow-hidden p-3">
+        <section className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+          <AiCopilotSidebar
+            messages={messages}
+            input={input}
+            setInput={setInput}
+            isSending={isSending}
+            onSend={(text) => handleSendText(text)}
+            suggestedActions={suggestedActions}
+            nextBestAction={visibleNextBestAction}
+            onRunNextAction={handleRunNextBestAction}
+            onDismissNextAction={() => visibleNextBestAction && setDismissedRecommendationKey(visibleNextBestAction.key)}
+            feedbackEvents={feedbackEvents}
+            onSubmitFeedback={handleSubmitFeedback}
+            aiRuns={aiRuns}
+            activeStageLabel={activeStageObj?.label}
+            isCanvasOpen={isCanvasOpen}
+            onOpenCanvas={handleOpenCanvasForCard}
+          />
+        </section>
+
+        {isCanvasOpen && (
+          <section className="fixed inset-3 z-40 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl flex flex-col lg:static lg:w-[40%] lg:min-w-[480px] lg:max-w-[720px] lg:shadow-sm">
+            <div className="h-12 shrink-0 border-b border-slate-100 bg-white px-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Canvas</div>
+                  <div className="text-xs font-bold text-slate-800 truncate">{activeStageObj?.label || "任务成果"}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCanvasOpen(false)}
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                aria-label="关闭 Canvas"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">{renderWorkspaceView()}</div>
+          </section>
+        )}
       </div>
     </div>
   );

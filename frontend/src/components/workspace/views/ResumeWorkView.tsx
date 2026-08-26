@@ -238,7 +238,7 @@ export const ResumeWorkView = ({ job, cardMsg, finalResumeCard, isProcessing, pr
                   </div>
                   
                   {/* Diff Content */}
-                  <div className="p-5 grid grid-cols-[1fr_auto_1fr] gap-4 items-center bg-white relative">
+                  <div className="p-5 grid grid-cols-1 gap-4 items-center bg-white relative">
                     {/* Original */}
                     <div className="h-full">
                       <div className="mb-2 flex items-center gap-2">
@@ -252,7 +252,7 @@ export const ResumeWorkView = ({ job, cardMsg, finalResumeCard, isProcessing, pr
                     </div>
 
                     {/* Arrow */}
-                    <div className="flex flex-col items-center justify-center text-slate-300">
+                    <div className="flex items-center justify-center text-slate-300 rotate-90">
                       <div className="w-8 h-[1px] bg-slate-200 mb-2"></div>
                       <ArrowRight className="w-5 h-5 text-indigo-400" />
                       <div className="w-8 h-[1px] bg-slate-200 mt-2"></div>

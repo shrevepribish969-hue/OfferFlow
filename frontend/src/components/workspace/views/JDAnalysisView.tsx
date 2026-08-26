@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, BrainCircuit, Loader2 } from 'lucide-react';
+import { Target, BrainCircuit, Loader2, ChevronDown } from 'lucide-react';
 import { ResumeViewer } from '@/components/ResumeViewer';
 
 interface JDAnalysisViewProps {
@@ -87,33 +87,39 @@ export const JDAnalysisView = ({ job, cardMsg, isProcessing, onComplete, onRegen
                 </div>
               )}
 
-              {cardMsg.data?.details && cardMsg.data.details.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {cardMsg.data.details
-                    .filter((detail: any) => detail.label !== "岗位分析结果") // Filter out redundant text
-                    .map((detail: any, idx: number) => (
-                    <div key={idx} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{detail.label}</span>
-                      <span className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{detail.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {cardMsg.data?.actions_taken && (
-                <div>
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">AI 提取的技能标签</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {cardMsg.data.actions_taken.map((action: string, i: number) => (
-                      <span
-                        key={i}
-                        className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100"
-                      >
-                        {action}
-                      </span>
-                    ))}
+              {(cardMsg.data?.details?.length > 0 || cardMsg.data?.actions_taken?.length > 0) && (
+                <details className="group mt-5 rounded-xl border border-slate-200 bg-slate-50/60">
+                  <summary className="list-none cursor-pointer px-4 py-3 flex items-center justify-between text-sm font-bold text-slate-700">
+                    查看完整解析依据与技能标签
+                    <ChevronDown className="w-4 h-4 text-slate-400 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="border-t border-slate-200 p-4">
+                    {cardMsg.data?.details && cardMsg.data.details.length > 0 && (
+                      <div className="grid grid-cols-1 gap-3 mb-5">
+                        {cardMsg.data.details
+                          .filter((detail: any) => detail.label !== "岗位分析结果")
+                          .map((detail: any, idx: number) => (
+                          <div key={idx} className="bg-white p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{detail.label}</span>
+                            <span className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{detail.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {cardMsg.data?.actions_taken && (
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">AI 提取的技能标签</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {cardMsg.data.actions_taken.map((action: string, i: number) => (
+                            <span key={i} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
+                              {action}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                </details>
               )}
             </div>
           </div>
