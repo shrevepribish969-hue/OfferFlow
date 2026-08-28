@@ -6,10 +6,11 @@ interface JobOverviewHeaderProps {
   job: any;
   currentStageLabel?: string;
   isCanvasOpen?: boolean;
+  hasArtifacts?: boolean;
   onToggleCanvas?: () => void;
 }
 
-export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, onToggleCanvas }: JobOverviewHeaderProps) => {
+export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, hasArtifacts = false, onToggleCanvas }: JobOverviewHeaderProps) => {
   return (
     <header className="h-16 flex items-center justify-between px-5 border-b border-slate-200 shrink-0 bg-white z-10 relative">
       <div className="flex items-center gap-4">
@@ -29,7 +30,7 @@ export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, onTogg
                 匹配度 {job?.match_score != null ? `${job.match_score}%` : "--"}
               </span>
               <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[11px] font-bold tracking-wide border border-blue-100">
-                当前查看: {currentStageLabel || "自由对话"}
+                {currentStageLabel ? `正在查看：${currentStageLabel}` : "Case Agent 对话中"}
               </span>
             </div>
           </div>
@@ -42,10 +43,11 @@ export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, onTogg
         </div>
         <button
           onClick={onToggleCanvas}
-          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:border-indigo-200 hover:text-indigo-700 transition-colors"
+          disabled={!hasArtifacts && !isCanvasOpen}
+          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:border-indigo-200 hover:text-indigo-700 transition-colors disabled:cursor-not-allowed disabled:opacity-45"
         >
           {isCanvasOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
-          {isCanvasOpen ? "关闭 Canvas" : "打开 Canvas"}
+          {isCanvasOpen ? "关闭成果" : hasArtifacts ? "查看成果" : "暂无成果"}
         </button>
       </div>
     </header>

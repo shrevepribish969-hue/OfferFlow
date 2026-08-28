@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { useParams } from "next/navigation";
 import { X, Sparkles } from "lucide-react";
 import { JobOverviewHeader } from "@/components/workspace/JobOverviewHeader";
 import { WorkflowStage } from "@/components/workspace/WorkflowSidebar";
-import { WorkflowNavigator } from "@/components/workspace/WorkflowNavigator";
-import { AiCopilotSidebar, NextBestAction } from "@/components/workspace/AiCopilotSidebar";
+import { AiCopilotSidebar } from "@/components/workspace/AiCopilotSidebar";
 import { ResumeWorkView } from "@/components/workspace/views/ResumeWorkView";
 import { JDAnalysisView } from "@/components/workspace/views/JDAnalysisView";
 import { JobMatchView } from "@/components/workspace/views/JobMatchView";
@@ -57,6 +56,32 @@ interface AIRun {
   started_at?: string | null;
 }
 
+const sanitizeAssistantText = (value: unknown) => {
+  let text = String(value || "");
+  const internalAgentNames = [
+    "Case Manager Agent",
+    "Resume Agent",
+    "Interview Agent",
+    "Communication Agent",
+    "Reflection Agent",
+    "岗位分析 Agent",
+    "岗位匹配 Agent",
+    "简历优化 Agent",
+    "简历生成 Agent",
+    "面试准备 Agent",
+    "面试复盘 Agent",
+    "沟通话术 Agent",
+    "复盘记忆 Agent",
+    "求职进度 Agent",
+  ];
+  internalAgentNames.forEach((name) => {
+    text = text.replaceAll(`我会请 ${name}`, "我会");
+    text = text.replaceAll(`我会调用 ${name}`, "我会");
+    text = text.replaceAll(name, "");
+  });
+  return text.replace(/ {2,}/g, " ").trim();
+};
+
 export default function WorkspaceV3() {
   const params = useParams();
   
@@ -66,6 +91,8 @@ export default function WorkspaceV3() {
   const [isSending, setIsSending] = useState(false);
   const [activeStageId, setActiveStageId] = useState<string>("");
   const [chatLoaded, setChatLoaded] = useState(false);
+  const [openingLoaded, setOpeningLoaded] = useState(false);
+  const [caseOpening, setCaseOpening] = useState<string>("");
   const [suggestedActions, setSuggestedActions] = useState<string[]>([
     "直接优化简历",
     "分析岗位要求",
@@ -73,10 +100,11 @@ export default function WorkspaceV3() {
     "准备面试",
   ]);
   const [completedStageIds, setCompletedStageIds] = useState<string[]>([]);
-  const [dismissedRecommendationKey, setDismissedRecommendationKey] = useState<string | null>(null);
   const [feedbackEvents, setFeedbackEvents] = useState<FeedbackEvent[]>([]);
   const [aiRuns, setAiRuns] = useState<AIRun[]>([]);
   const [isCanvasOpen, setIsCanvasOpen] = useState(false);
+  const [canvasWidth, setCanvasWidth] = useState(38);
+  const workspaceRef = useRef<HTMLDivElement>(null);
 
   const fetchFeedbackEvents = async (jobId: string | number) => {
     try {
@@ -119,13 +147,27 @@ export default function WorkspaceV3() {
                 try {
                   const data = JSON.parse(msg.content);
                   if (data.card) {
-                    return { id: msg.id.toString(), role: "agent", type: "card", card_type: data.card.card_type, content: data.card.content, data: data.card.data };
+                    const isLegacyJdArtifact = ["ExecutionSummary", "JDAnalysis"].includes(data.card.card_type);
+                    if (data.card.card_type === "ApplicationStatus") {
+                      const applyStatus = data.card.data?.apply_status || {};
+                      const linkPrompt = applyStatus.link
+                        ? "投递链接也已经保存，之后可以直接从这里打开。"
+                        : "为了方便后续一键跳转，需要我同时记录投递链接吗？你可以直接把链接发给我。";
+                      return {
+                        id: msg.id.toString(),
+                        role: "agent",
+                        type: "text",
+                        content: sanitizeAssistantText(`${data.card.content || "投递记录已更新。"}\n\n${linkPrompt}`),
+                        is_system_hidden: false,
+                      };
+                    }
+                    return { id: msg.id.toString(), role: "agent", type: "card", card_type: data.card.card_type, content: sanitizeAssistantText(data.card.content), data: data.card.data, is_system_hidden: isLegacyJdArtifact };
                   }
-                  return { id: msg.id.toString(), role: "agent", type: "text", content: msg.content, is_system_hidden: msg.is_system_trigger };
+                  return { id: msg.id.toString(), role: "agent", type: "text", content: sanitizeAssistantText(msg.content), is_system_hidden: msg.is_system_trigger };
                 } catch (e) {
                   // Heuristic to hide raw markdown that the backend generated for cards
                   const isRawCardText = msg.content.includes("【岗位名称】") || msg.content.includes("【岗位摘要】");
-                  return { id: msg.id.toString(), role: "agent", type: "text", content: msg.content, is_system_hidden: msg.is_system_trigger || isRawCardText };
+                  return { id: msg.id.toString(), role: "agent", type: "text", content: sanitizeAssistantText(msg.content), is_system_hidden: msg.is_system_trigger || isRawCardText };
                 }
               }
               return { id: msg.id.toString(), role: "user", type: "text", content: msg.content };
@@ -139,24 +181,35 @@ export default function WorkspaceV3() {
           setChatLoaded(true);
         });
 
+      fetch(`/backend-api/jobs/${params.id}/opening`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`opening request failed: ${res.status}`);
+          return res.json();
+        })
+        .then((opening) => {
+          setCaseOpening(opening.message || "");
+          if (Array.isArray(opening.suggestions) && opening.suggestions.length > 0) {
+            setSuggestedActions(opening.suggestions);
+          }
+        })
+        .catch((err) => console.error(err))
+        .finally(() => setOpeningLoaded(true));
+
       fetchFeedbackEvents(params.id as string);
       fetchAiRuns(params.id as string);
     }
   }, [params]);
 
   useEffect(() => {
-    if (!chatLoaded || !job) return;
-    const hasConversationalAgentMessage = messages.some(
-      (message) => message.role === "agent" && message.type === "text" && !message.is_system_hidden
-    );
-    if (hasConversationalAgentMessage) return;
+    if (!chatLoaded || !openingLoaded || !job) return;
+    if (messages.some((message) => message.id === "case-agent-welcome")) return;
     setMessages((previous) => [{
       id: "case-agent-welcome",
       role: "agent",
       type: "text",
-      content: `我们来处理 ${job.company || "这个公司"} · ${job.role || "这个岗位"}。${job.jd_content ? "我已经读取了岗位信息。" : "目前还没有完整 JD。"}\n\n你想先做什么？你可以直接说“这个岗位我一定会投，跳过匹配，直接优化简历”，也可以让我分析岗位、准备面试或生成投递话术。流程不是固定的，我会根据你的目标调用合适的 Agent。`,
+      content: caseOpening || `我目前获取到你想分析的岗位是 ${job.company || "这个公司"} · ${job.role || "这个岗位"}。\n\n你下一步更想解决什么？可以直接用自己的话告诉我。`,
     }, ...previous]);
-  }, [chatLoaded, job, messages.length]);
+  }, [chatLoaded, openingLoaded, caseOpening, job, messages.length]);
 
   // Derived Workflow Stages based on messages/job progress & user completions
   const isStageDone = (id: string) => {
@@ -198,17 +251,28 @@ export default function WorkspaceV3() {
   const handleSendText = async (textToSubmit: string, isSystemTrigger = false, systemWorkflow?: string, roundId?: string) => {
     if ((!textToSubmit.trim() && !isSystemTrigger) || isSending || !job) return;
 
-    if (textToSubmit === "生成打招呼语" || textToSubmit === "生成打招呼") {
-      systemWorkflow = "GreetingGeneration";
-    }
-
     if (!isSystemTrigger) {
-      setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", type: "text", content: textToSubmit }]);
+      const sentAt = Date.now();
+      setMessages((prev) => [
+        ...prev,
+        { id: sentAt.toString(), role: "user", type: "text", content: textToSubmit },
+        {
+          id: `thinking-${sentAt}`,
+          role: "agent",
+          type: "agent_run",
+          main_status: "Case Agent 正在理解你的目标…",
+          steps: [],
+          is_completed: false,
+        },
+      ]);
     }
     setIsSending(true);
 
     const requestController = new AbortController();
-    const requestTimeoutMs = systemWorkflow === "InterviewEvaluation" ? 330000 : 150000;
+    // Specialist work such as interview preparation can combine local retrieval
+    // with a long model response. Keep one generous ceiling for conversational
+    // routing too, because the chosen workflow is only known by the backend.
+    const requestTimeoutMs = 330000;
     const requestTimeout = window.setTimeout(() => requestController.abort(), requestTimeoutMs);
 
     try {
@@ -245,20 +309,25 @@ export default function WorkspaceV3() {
               setMessages((prev) => {
                 const newMessages = [...prev];
                 if (data.type === "text" || data.type === "card") {
+                  // Remove the instant waiting cue once a real response arrives.
+                  // It should never remain as a standalone "completed" block.
+                  for (let i = newMessages.length - 1; i >= 0; i--) {
+                    if (String(newMessages[i].id).startsWith("thinking-") && !newMessages[i].is_completed) {
+                      newMessages.splice(i, 1);
+                    }
+                  }
                   newMessages.push({
                     id: Date.now().toString() + Math.random(),
-                    role: "agent", type: data.type, content: data.content, card_type: data.card_type, data: data.data,
+                    role: "agent", type: data.type, content: sanitizeAssistantText(data.content), card_type: data.card_type, data: data.data,
                     is_system_hidden: false
                   });
-                  if (data.type === "card" && job) {
-                    fetchAiRuns(job.id);
-                    handleOpenCanvasForCard(data.card_type, data.data);
-                  }
-                  // mark last run complete
+                  // Mark a real streamed analysis run complete. The lightweight
+                  // waiting cue above has already been removed.
                   for (let i = newMessages.length - 2; i >= 0; i--) {
                     if (newMessages[i].type === "agent_run" && !newMessages[i].is_completed) {
                       newMessages[i].is_completed = true;
                       newMessages[i].main_status = "已完成";
+                      newMessages[i].steps = (newMessages[i].steps || []).map((step: any) => ({ ...step, status: "done" }));
                       break;
                     }
                   }
@@ -286,6 +355,9 @@ export default function WorkspaceV3() {
                 }
                 return newMessages;
               });
+              if (data.type === "card" && job) {
+                fetchAiRuns(job.id);
+              }
             }
           }
         }
@@ -296,7 +368,12 @@ export default function WorkspaceV3() {
         ? "生成超时，请点击“重新预测”再试一次。"
         : `生成失败：${error instanceof Error ? error.message : "未知错误"}`;
       setMessages((prev) => {
-        return [...prev, {
+        const completed = prev.map((message) =>
+          message.type === "agent_run" && !message.is_completed
+            ? { ...message, is_completed: true, main_status: "请求未完成" }
+            : message
+        );
+        return [...completed, {
           id: `error-${Date.now()}`,
           role: "agent",
           type: "text",
@@ -326,8 +403,6 @@ export default function WorkspaceV3() {
 
   const handleOpenCanvasForCard = (cardType?: string, data?: any) => {
     const stageByCard: Record<string, string> = {
-      ExecutionSummary: "jd",
-      JDAnalysis: "jd",
       MatchAnalysis: "match",
       ResumeOptimizer: "resume",
       ContentGeneration: "resume",
@@ -335,160 +410,70 @@ export default function WorkspaceV3() {
       InterviewPrep: data?.round_id === "2" ? "interview_2" : data?.round_id === "hr" ? "interview_hr" : "interview_1",
       InterviewEvaluation: data?.round_id === "2" ? "interview_2" : data?.round_id === "hr" ? "interview_hr" : "interview_1",
     };
-    if (cardType && stageByCard[cardType]) {
-      setActiveStageId(stageByCard[cardType]);
-    }
+    if (!cardType || !stageByCard[cardType]) return;
+    setActiveStageId(stageByCard[cardType]);
     setIsCanvasOpen(true);
+  };
+
+  const getDefaultArtifactStage = () => {
+    const latestCard = messages.slice().reverse().find((message) =>
+      ["MatchAnalysis", "ResumeOptimizer", "ContentGeneration", "ApplicationStatus", "InterviewPrep", "InterviewEvaluation"].includes(message.card_type)
+    );
+    if (latestCard) {
+      const roundId = latestCard.data?.round_id || latestCard.card_data?.round_id;
+      if (latestCard.card_type === "MatchAnalysis") return "match";
+      if (["ResumeOptimizer", "ContentGeneration"].includes(latestCard.card_type)) return "resume";
+      if (latestCard.card_type === "ApplicationStatus") return "apply";
+      if (["InterviewPrep", "InterviewEvaluation"].includes(latestCard.card_type)) {
+        return roundId === "2" ? "interview_2" : roundId === "hr" ? "interview_hr" : "interview_1";
+      }
+    }
+    const workflowData = job?.workflow_data || {};
+    if (workflowData.offer_status) return "offer";
+    if (workflowData.interview_evaluation_result || workflowData.interview_prep_result) return "interview_1";
+    if (workflowData.apply_status) return "apply";
+    if (workflowData.resume_optimization_result || workflowData.content_generation_result || workflowData.resume_json) return "resume";
+    if (workflowData.job_matching_result || job?.match_score !== null) return "match";
+    return "";
+  };
+
+  const defaultArtifactStage = getDefaultArtifactStage();
+  const handleToggleCanvas = () => {
+    if (isCanvasOpen) {
+      setIsCanvasOpen(false);
+      return;
+    }
+    if (!activeStageId && defaultArtifactStage) {
+      setActiveStageId(defaultArtifactStage);
+    }
+    if (activeStageId || defaultArtifactStage) {
+      setIsCanvasOpen(true);
+    }
+  };
+
+  const beginCanvasResize = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!workspaceRef.current) return;
+    event.preventDefault();
+    const container = workspaceRef.current;
+    const handleMove = (moveEvent: PointerEvent) => {
+      const rect = container.getBoundingClientRect();
+      const nextWidth = ((rect.right - moveEvent.clientX) / rect.width) * 100;
+      setCanvasWidth(Math.min(65, Math.max(30, nextWidth)));
+    };
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
   };
 
   const handleRegenerate = (workflowName: string) => {
     handleSendText("", true, workflowName);
-  };
-
-  const getLatestAgentRun = () => messages.slice().reverse().find(m => m.type === "agent_run");
-
-  const hasCard = (cardTypes: string[]) => messages.some(m => cardTypes.includes(m.card_type));
-
-  const getNextBestAction = (): (NextBestAction & { workflow?: string; stageId?: string; message?: string; roundId?: string }) | null => {
-    if (!job) return null;
-    const latestAgentRun = getLatestAgentRun();
-    if (latestAgentRun && !latestAgentRun.is_completed) return null;
-
-    const workflowData = job.workflow_data || {};
-    const hasJDContent = Boolean(job.jd_content && job.jd_content.trim());
-    const hasJDAnalysis = hasCard(["ExecutionSummary", "JDAnalysis"]) || Boolean(workflowData.jd_analysis_result);
-    const hasMatch = hasCard(["MatchAnalysis"]) || Boolean(workflowData.job_matching_result) || job.match_score !== null;
-    const hasResumeOptimization = hasCard(["ResumeOptimizer"]) || Boolean(workflowData.resume_optimization_result);
-    const hasFinalResume = hasCard(["ContentGeneration"]) || Boolean(workflowData.content_generation_result || workflowData.resume_json);
-    const hasApplied = Boolean(workflowData.apply_status) || job.status === "已投递";
-    const hasInterviewPrep = hasCard(["InterviewPrep"]);
-    const hasInterviewEvaluation = hasCard(["InterviewEvaluation"]) || Boolean(workflowData.interview_evaluation_result);
-    const hasReflection = Boolean(workflowData.latest_reflection);
-
-    if (!hasJDContent) {
-      return {
-        key: "missing-jd",
-        status: "当前 Job Case 还没有完整 JD 内容。",
-        title: "先补充岗位 JD",
-        reason: "没有岗位信息时，系统无法可靠地分析岗位要求、计算匹配度或生成定向简历建议。",
-        risk: "如果缺少 JD 就直接生成内容，AI 容易给出泛泛建议。",
-        primaryLabel: "去补充 JD",
-        stageId: "jd"
-      };
-    }
-
-    if (!hasJDAnalysis) {
-      return {
-        key: "run-jd-analysis",
-        status: "已导入 JD，但还没有结构化岗位分析。",
-        title: "建议先分析 JD",
-        reason: "JD 分析会提取岗位职责、核心能力和关键词，是岗位匹配与简历优化的基础。",
-        risk: "跳过 JD 分析会让后续匹配和简历优化缺少依据。",
-        primaryLabel: "开始 JD 分析",
-        workflow: "JDAnalysis",
-        stageId: "jd"
-      };
-    }
-
-    if (!hasMatch) {
-      return {
-        key: "run-job-matching",
-        status: "JD 已完成分析，但还没有岗位匹配结果。",
-        title: "建议进行岗位匹配",
-        reason: "岗位匹配能先判断你的优势、短板和投入优先级，再决定简历应该重点突出什么。",
-        risk: "如果直接优化简历，AI 可能无法判断哪些经历最值得强化。",
-        primaryLabel: "开始岗位匹配",
-        workflow: "JobMatching",
-        stageId: "match"
-      };
-    }
-
-    if (!hasResumeOptimization) {
-      return {
-        key: "run-resume-optimization",
-        status: "已有岗位匹配结果，但还没有定向简历优化建议。",
-        title: "建议优化简历",
-        reason: "当前已经知道岗位要求和你的能力缺口，可以生成更有针对性的简历修改建议。",
-        risk: "简历修改需要基于真实经历，后续仍需要你审核确认。",
-        primaryLabel: "优化简历",
-        workflow: "ResumeOptimization",
-        stageId: "resume"
-      };
-    }
-
-    if (!hasFinalResume) {
-      return {
-        key: "review-resume-patches",
-        status: "已有简历优化建议，但还没有生成最终简历版本。",
-        title: "建议审核简历修改",
-        reason: "简历属于职业关键材料，AI 可以提出建议，但最终内容应该由用户确认后再生成。",
-        risk: "未经审核直接使用可能出现夸大、不准确或表达不符合个人风格的问题。",
-        primaryLabel: "查看修改建议",
-        stageId: "resume"
-      };
-    }
-
-    if (!hasApplied) {
-      return {
-        key: "prepare-application",
-        status: "简历版本已准备好，但当前 Job Case 还没有投递记录。",
-        title: "建议推进投递",
-        reason: "完成简历准备后，下一步应该生成沟通话术或记录投递状态，避免流程停在材料准备阶段。",
-        primaryLabel: "进入投递阶段",
-        stageId: "apply"
-      };
-    }
-
-    if (!hasInterviewPrep && activeStageId.startsWith("interview")) {
-      return {
-        key: "run-interview-prep",
-        status: "当前进入面试阶段，但还没有本轮面试准备包。",
-        title: "建议生成面试准备",
-        reason: "面试准备应结合 JD、简历亮点和真实面经问题，提前组织答题策略。",
-        risk: "如果只临场准备，容易遗漏岗位核心能力和高频追问。",
-        primaryLabel: "生成面试准备",
-        workflow: "InterviewPrep",
-        stageId: activeStageId,
-        roundId: activeStageId === "interview_2" ? "2" : activeStageId === "interview_hr" ? "hr" : "1"
-      };
-    }
-
-    if (hasInterviewEvaluation && !hasReflection) {
-      return {
-        key: "confirm-reflection",
-        status: "已有面试复盘结果，但还没有沉淀为长期记忆。",
-        title: "建议沉淀复盘记忆",
-        reason: "面试中暴露的问题可以转化为长期准备重点，让后续面试准备更个性化。",
-        risk: "记忆写入前应让用户确认，避免系统记住不准确结论。",
-        primaryLabel: "查看复盘",
-        stageId: activeStageId.startsWith("interview") ? activeStageId : "interview_1"
-      };
-    }
-
-    return {
-      key: "steady-progress",
-      status: "当前 Job Case 的核心准备流程已经比较完整。",
-      title: "建议检查整体进度",
-      reason: "可以从左侧流程查看是否还有未完成的投递、面试或 Offer 跟进事项。",
-      primaryLabel: "查看流程",
-      stageId: activeStageId
-    };
-  };
-
-  const nextBestAction = getNextBestAction();
-  const visibleNextBestAction = nextBestAction?.key === dismissedRecommendationKey ? null : nextBestAction;
-
-  const handleRunNextBestAction = () => {
-    if (!visibleNextBestAction) return;
-    if (visibleNextBestAction.stageId) {
-      setActiveStageId(visibleNextBestAction.stageId);
-    }
-    if (visibleNextBestAction.workflow) {
-      setIsCanvasOpen(false);
-      handleSendText(visibleNextBestAction.message || "", true, visibleNextBestAction.workflow, visibleNextBestAction.roundId);
-    } else {
-      setIsCanvasOpen(true);
-    }
   };
 
   const handleSubmitFeedback = async (payload: { message_id?: string; card_type?: string; feedback: string; feedback_type?: string; feedback_code?: string; feedback_category?: string; ai_run_id?: number }) => {
@@ -640,18 +625,13 @@ export default function WorkspaceV3() {
     <div className="flex flex-col h-screen w-full bg-[#f4f5f8] overflow-hidden font-sans">
       <JobOverviewHeader
         job={job}
-        currentStageLabel={activeStageObj?.label}
+        currentStageLabel={isCanvasOpen ? activeStageObj?.label : undefined}
         isCanvasOpen={isCanvasOpen}
-        onToggleCanvas={() => setIsCanvasOpen((open) => !open)}
+        hasArtifacts={Boolean(defaultArtifactStage)}
+        onToggleCanvas={handleToggleCanvas}
       />
 
-      <WorkflowNavigator
-        stages={stages}
-        activeStageId={activeStageId}
-        onStageSelect={handleStageSelect}
-      />
-
-      <div className="flex-1 flex gap-3 overflow-hidden p-3">
+      <div ref={workspaceRef} className="flex-1 flex gap-2 overflow-hidden p-3">
         <section className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <AiCopilotSidebar
             messages={messages}
@@ -660,9 +640,6 @@ export default function WorkspaceV3() {
             isSending={isSending}
             onSend={(text) => handleSendText(text)}
             suggestedActions={suggestedActions}
-            nextBestAction={null}
-            onRunNextAction={handleRunNextBestAction}
-            onDismissNextAction={() => visibleNextBestAction && setDismissedRecommendationKey(visibleNextBestAction.key)}
             feedbackEvents={feedbackEvents}
             onSubmitFeedback={handleSubmitFeedback}
             aiRuns={aiRuns}
@@ -673,7 +650,22 @@ export default function WorkspaceV3() {
         </section>
 
         {isCanvasOpen && (
-          <section className="fixed inset-3 z-40 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl flex flex-col lg:static lg:w-[40%] lg:min-w-[480px] lg:max-w-[720px] lg:shadow-sm">
+          <div
+            role="separator"
+            aria-label="调整对话与成果区域宽度"
+            aria-orientation="vertical"
+            onPointerDown={beginCanvasResize}
+            className="hidden lg:flex w-2 shrink-0 cursor-col-resize items-center justify-center rounded-full hover:bg-indigo-50 group"
+          >
+            <div className="h-12 w-1 rounded-full bg-slate-200 group-hover:bg-indigo-300 transition-colors" />
+          </div>
+        )}
+
+        {isCanvasOpen && (
+          <section
+            className="fixed inset-3 z-40 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl flex flex-col lg:static lg:w-[var(--canvas-width)] lg:min-w-[380px] lg:max-w-[65%] lg:shadow-sm"
+            style={{ "--canvas-width": `${canvasWidth}%` } as any}
+          >
             <div className="h-12 shrink-0 border-b border-slate-100 bg-white px-4 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">

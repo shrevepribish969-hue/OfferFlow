@@ -126,7 +126,6 @@ export const AiCopilotSidebar = ({
   const [showReason, setShowReason] = useState(false);
   const [feedbackByMessage, setFeedbackByMessage] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<"chat" | "logs">("chat");
-
   useEffect(() => {
     if (messages[0]?.id === "case-agent-welcome" && !positionedWelcomeRef.current) {
       positionedWelcomeRef.current = true;
@@ -373,14 +372,11 @@ export const AiCopilotSidebar = ({
     }
 
     if (msg.type === 'agent_run') {
+      if (msg.is_completed) return null;
       return (
         <div key={idx} className="mb-4">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 mb-1">
-            {msg.is_completed ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-            ) : (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
-            )}
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
             <span>{msg.main_status}</span>
           </div>
           {msg.steps && msg.steps.length > 0 && (
@@ -404,7 +400,7 @@ export const AiCopilotSidebar = ({
     if (msg.type === 'card') {
       if (msg.card_type === "GreetingGeneration") {
         return (
-          <div key={idx} className="flex gap-2 mb-4 max-w-[95%]">
+          <div key={idx} className="flex gap-2 mb-4 max-w-[84%]">
             <div className="w-6 h-6 rounded-md bg-indigo-100 flex items-center justify-center shrink-0 mt-0.5">
               <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
             </div>
@@ -425,23 +421,42 @@ export const AiCopilotSidebar = ({
       if (msg.card_type === "InterviewEvaluation") stageName = "面试复盘";
       if (msg.card_type === "ApplicationStatus") stageName = "投递记录";
       const isErrorCard = typeof msg.content === "string" && msg.content.startsWith("Error:");
+      let conversationContent = msg.content || "分析已经完成。";
+      if (msg.card_type === "MatchAnalysis" && msg.data?.match_data) {
+        const matchData = msg.data.match_data;
+        const formatItems = (items: any) => Array.isArray(items)
+          ? items.slice(0, 3).map((item: any) => typeof item === "string" ? item : item?.name || item?.skill || item?.requirement || "").filter(Boolean).join("、")
+          : "";
+        const strengths = formatItems(matchData.matching_skills);
+        const gaps = formatItems(matchData.gap_skills);
+        conversationContent = `初步结论：综合匹配度约为 ${matchData.score}%。“${strengths ? `你的主要优势是${strengths}` : "你的经历与岗位存在一定匹配点"}；${gaps ? `需要重点补强${gaps}` : "暂未发现明显的硬性能力缺口"}。”${matchData.reason ? ` ${matchData.reason}` : ""}`;
+      }
+      if (msg.card_type === "ResumeOptimizer") {
+        const patchCount = Array.isArray(msg.data?.optimization_patches) ? msg.data.optimization_patches.length : 0;
+        conversationContent = patchCount > 0
+          ? `我已经整理出 ${patchCount} 条可逐项确认的简历修改建议。`
+          : "简历修改建议已经整理完成。";
+      }
       
       return (
-        <div key={idx} className="flex gap-2 mb-4 max-w-[95%]">
+        <div key={idx} className="flex gap-2 mb-4 max-w-[84%]">
           <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isErrorCard ? "bg-red-100" : "bg-slate-200"}`}>
             {isErrorCard ? <AlertTriangle className="w-3.5 h-3.5 text-red-600" /> : <Terminal className="w-3.5 h-3.5 text-slate-600" />}
           </div>
-          <div className={`bg-white border px-3 py-2 rounded-xl rounded-tl-none text-sm shadow-sm whitespace-pre-wrap font-medium ${isErrorCard ? "border-red-200 text-red-700" : "border-slate-200 text-slate-700"}`}>
+          <div className={`min-w-0 bg-white border px-3 py-2.5 rounded-xl rounded-tl-none text-sm shadow-sm whitespace-pre-wrap font-medium ${isErrorCard ? "border-red-200 text-red-700" : "border-slate-200 text-slate-700"}`}>
             {isErrorCard
               ? `[${stageName}] 生成失败：${msg.content.replace(/^Error:\s*/, "")}`
-              : `[${stageName}] 数据已生成。你可以先看结论，需要时再打开 Canvas 查看完整结果。`}
+              : <>
+                  <div className="font-bold text-slate-900 mb-1">{stageName}</div>
+                  <div className="font-normal leading-relaxed line-clamp-3">{conversationContent}</div>
+                </>}
             {!isErrorCard && onOpenCanvas && (
               <button
                 onClick={() => onOpenCanvas(msg.card_type, msg.data)}
-                className="mt-3 w-full rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
+                className="mt-2.5 inline-flex rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors items-center gap-1.5"
               >
                 <PanelRightOpen className="w-3.5 h-3.5" />
-                {isCanvasOpen ? "在 Canvas 中定位" : "在 Canvas 中打开"}
+                打开成果
               </button>
             )}
             {renderFeedbackBar(msg, idx)}
@@ -477,7 +492,7 @@ export const AiCopilotSidebar = ({
                 <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-bold text-indigo-600 ring-1 ring-indigo-100">ACTIVE</span>
               </div>
               <p className="mt-0.5 text-xs text-slate-500">
-                {isSending ? "正在执行任务并整理结果…" : `正在关注：${activeStageLabel || "当前求职任务"}`}
+                {isSending ? "正在处理你的请求…" : activeStageLabel ? `正在查看：${activeStageLabel}` : "先理解你的目标，再灵活推进下一步"}
               </p>
             </div>
           </div>
@@ -511,7 +526,7 @@ export const AiCopilotSidebar = ({
                   <Compass className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold text-indigo-500 uppercase tracking-wider">Case Manager Agent</div>
+                  <div className="text-[11px] font-bold text-indigo-500 tracking-wider">下一步建议</div>
                   <div className="text-sm font-bold text-slate-900">{nextBestAction.title}</div>
                 </div>
               </div>
@@ -579,8 +594,8 @@ export const AiCopilotSidebar = ({
       <div className="p-4 bg-white border-t border-slate-100 flex flex-col gap-3">
         {suggestedActions.length > 0 && (
           <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Command className="w-3 h-3" /> Quick Commands
+            <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+              <Command className="w-3 h-3" /> 接下来
             </span>
             <div className="flex flex-wrap gap-2">
               {suggestedActions.map((action, idx) => (
@@ -588,7 +603,7 @@ export const AiCopilotSidebar = ({
                   key={idx}
                   onClick={() => onSend(action)}
                   disabled={isSending}
-                  className="px-2.5 py-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-600 hover:text-indigo-700 rounded-lg text-xs font-medium transition-all text-left flex-1 min-w-[45%]"
+                  className="flex-none px-3 py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-600 hover:text-indigo-700 rounded-full text-xs font-medium transition-all"
                 >
                   {action}
                 </button>
@@ -607,7 +622,7 @@ export const AiCopilotSidebar = ({
                 handleSend();
               }
             }}
-            placeholder="Command AI..."
+            placeholder="告诉我你现在想解决什么，或继续追问…"
             className="w-full bg-transparent outline-none text-sm p-2 min-h-[40px] max-h-[120px] resize-none"
             rows={1}
           />

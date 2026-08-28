@@ -3,7 +3,7 @@ import json
 import re
 import asyncio
 import logging
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
 from dotenv import load_dotenv
 from . import models
 from ..services.resume_parser_service import normalize_resume_schema
@@ -31,31 +31,94 @@ def load_prompt(prompt_name: str) -> str:
 
 class SkillExecutor:
     @staticmethod
-    async def _call_llm(system_prompt: str, user_payload: dict) -> dict:
+    async def _call_llm_bounded(
+        system_prompt: str,
+        user_payload: dict,
+        *,
+        timeout_seconds: float = 120.0,
+        max_tokens: int = 4000,
+    ) -> dict:
+        """Run a long generation off the event loop with a hard outer limit."""
+        msg_str = json.dumps(user_payload, ensure_ascii=False)
+
+        def invoke() -> dict:
+            client = OpenAI(
+                api_key=API_KEY,
+                base_url=BASE_URL,
+                timeout=min(timeout_seconds, 90.0),
+                max_retries=0,
+            )
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": msg_str},
+                ],
+                temperature=0.2,
+                response_format={"type": "json_object"},
+                max_tokens=max_tokens,
+            )
+            text = response.choices[0].message.content.strip()
+            json_match = re.search(r"\{.*\}", text, re.DOTALL)
+            if json_match:
+                text = json_match.group(0)
+            return json.loads(text)
+
+        try:
+            task = asyncio.create_task(asyncio.to_thread(invoke))
+            done, _ = await asyncio.wait({task}, timeout=timeout_seconds)
+            if not done:
+                # Do not await cancellation: the underlying HTTP library may
+                # ignore it until the socket returns. The chat request must end.
+                task.add_done_callback(lambda finished: finished.exception())
+                raise TimeoutError(f"模型服务在 {int(timeout_seconds)} 秒内未返回")
+            return task.result()
+        except Exception as exc:
+            err = SkillExecutor._format_error(
+                "skill_executor", "1.0", "LLM_CALL_FAILED", str(exc), False
+            )
+            err["error"] = True
+            return err
+
+    @staticmethod
+    async def _call_llm(
+        system_prompt: str,
+        user_payload: dict,
+        *,
+        timeout_seconds: float = 120.0,
+        max_attempts: int = 3,
+        max_tokens: int | None = None,
+    ) -> dict:
         client = AsyncOpenAI(
             api_key=API_KEY,
             base_url=BASE_URL,
-            timeout=120.0,
+            timeout=timeout_seconds,
             max_retries=0,
         )
         msg_str = json.dumps(user_payload, ensure_ascii=False)
         try:
             response = None
-            for attempt in range(3):
+            for attempt in range(max_attempts):
                 try:
-                    response = await client.chat.completions.create(
-                        model=MODEL_NAME,
-                        messages=[
+                    request_kwargs = {
+                        "model": MODEL_NAME,
+                        "messages": [
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": msg_str}
                         ],
-                        temperature=0.2
+                        "temperature": 0.2,
+                    }
+                    if max_tokens is not None:
+                        request_kwargs["max_tokens"] = max_tokens
+                    response = await asyncio.wait_for(
+                        client.chat.completions.create(**request_kwargs),
+                        timeout=timeout_seconds,
                     )
                     break
                 except Exception as exc:
                     status_code = getattr(exc, "status_code", None)
                     transient = status_code in {429, 500, 502, 503, 504} or exc.__class__.__name__ == "APIConnectionError"
-                    if not transient or attempt == 2:
+                    if not transient or attempt == max_attempts - 1:
                         raise
                     await asyncio.sleep(5 * (attempt + 1))
 
@@ -340,8 +403,16 @@ class SkillExecutor:
         # Merge into workflow_data
         if "error" not in result:
             res_opt = result.get("resume_optimization_result", {})
+            # Empty suggestions cannot be acted on and previously rendered as
+            # large blank diff cards. Keep legitimate additions (empty
+            # original) but discard patches that have no proposed content.
+            clean_patches = [
+                patch for patch in (res_opt.get("optimization_patches", []) or [])
+                if isinstance(patch, dict) and str(patch.get("suggestion") or "").strip()
+            ]
+            res_opt["optimization_patches"] = clean_patches
             w_data = dict(job.workflow_data) if job.workflow_data else {}
-            w_data["optimization_patches"] = res_opt.get("optimization_patches", [])
+            w_data["optimization_patches"] = clean_patches
             w_data["optimization_summary"] = res_opt.get("optimization_summary", "")
             job.workflow_data = w_data
             SkillExecutor.append_timeline_event(db_session, job.id, "ResumeOptimized", {"skill_version": "1.0"})
@@ -354,7 +425,7 @@ class SkillExecutor:
                 job_case_id=job.id,
                 version_number=existing_count + 1,
                 base_resume_snapshot=profile.base_resume if profile else None,
-                optimization_patches=res_opt.get("optimization_patches", []),
+                optimization_patches=clean_patches,
                 optimization_summary=res_opt.get("optimization_summary", ""),
             )
             db_session.add(rv)
@@ -380,13 +451,20 @@ class SkillExecutor:
         # 1. Retrieve real interview examples. These calibrate wording and
         # follow-up style; they no longer define the interview coverage.
         from runtime.services.hierarchical_retriever import HierarchicalRetriever
-        retriever = HierarchicalRetriever()
-        top_questions = retriever.retrieve(
-            jd_analysis_result=jd_result, 
-            target_company=job.company, 
-            target_role=job.role, 
-            top_k=12
-        )
+        # The bundled sentence-transformer can monopolize the Python runtime
+        # during cold start on Windows. Metadata + lexical ranking is already
+        # deterministic and explainable, so keep the interactive request on
+        # that reliable path. Semantic indexing can still be prepared offline.
+        retriever = HierarchicalRetriever(enable_semantic=False)
+        retrieval_kwargs = {
+            "jd_analysis_result": jd_result,
+            "target_company": job.company,
+            "target_role": job.role,
+            "top_k": 5,
+        }
+        logger.info("InterviewPrep: lexical retrieval started")
+        top_questions = retriever.retrieve(**retrieval_kwargs)
+        logger.info("InterviewPrep: lexical retrieval completed with %s questions", len(top_questions))
         
         # 2. Fetch User Global Story Bank
         user = db_session.query(models.UserProfile).first()
@@ -460,7 +538,9 @@ class SkillExecutor:
                 },
                 "competency": q.get("competency", ""),
                 "best_match_story": best_match_story,
-                "other_stories": other_stories,
+                # Repeating every story name for every question made the prompt
+                # grow quadratically without improving the answer.
+                "other_stories": list(dict.fromkeys(other_stories))[:5],
                 "retrieval": {
                     "score": q.get("_retrieval_score", 0),
                     "score_breakdown": q.get("_score_breakdown", {}),
@@ -476,6 +556,7 @@ class SkillExecutor:
         from ..services.memory_service import MemoryService
         profile = db_session.query(models.UserProfile).filter(models.UserProfile.id == user_id).first()
         confirmed_memory = MemoryService.get_context(db_session, user_id=user_id)
+        logger.info("InterviewPrep: memory and story context loaded")
         weakness_memory = confirmed_memory.get("weaknesses", []) + confirmed_memory.get("systemic_weaknesses", [])
 
         round_map = {"1": "一面", "2": "二面", "hr": "HR面"}
@@ -527,14 +608,27 @@ class SkillExecutor:
                 "next_round_brief": previous_eval.get("next_round_brief", {}),
             }
 
+        matched_story_names = {
+            item["best_match_story"]["project_name"]
+            for item in formatted_questions
+            if item.get("best_match_story")
+        }
+        ranked_stories = sorted(
+            story_cards,
+            key=lambda story: (
+                story.project_name in matched_story_names,
+                story.performance_score or 0,
+            ),
+            reverse=True,
+        )[:8]
         story_bank = [
             {
                 "project_name": story.project_name,
-                "summary": story.summary,
+                "summary": (story.summary or "")[:800],
                 "competency_tags": story.competency_tags,
                 "performance_score": story.performance_score,
             }
-            for story in story_cards
+            for story in ranked_stories
         ]
         resume_payload = profile.base_resume if profile else {}
         if isinstance(resume_payload, str):
@@ -556,7 +650,32 @@ class SkillExecutor:
             }
         }
         
-        result = await SkillExecutor._call_llm(system_prompt, user_payload)
+        logger.info(
+            "InterviewPrep: model call started (payload_chars=%s, stories=%s)",
+            len(json.dumps(user_payload, ensure_ascii=False)),
+            len(story_bank),
+        )
+        result = await SkillExecutor._call_llm_bounded(
+            system_prompt,
+            user_payload,
+            timeout_seconds=150.0,
+            max_tokens=6000,
+        )
+        logger.info(
+            "InterviewPrep: model call completed (error=%s, detail=%s)",
+            "error" in result,
+            result.get("error_message", ""),
+        )
+
+        if "error" in result:
+            error_result = SkillExecutor._format_error(
+                "interview_prep",
+                "5.7",
+                result.get("error_code", "LLM_CALL_FAILED"),
+                result.get("error_message", "面试内容生成失败"),
+            )
+            error_result["error"] = True
+            return error_result
 
         # Attach evidence only through an explicit RAG id. Index-based binding
         # can attribute the wrong source when the model changes question order.

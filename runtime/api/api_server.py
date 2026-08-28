@@ -28,10 +28,13 @@ from ..services.sqlite_import_service import (
     import_sqlite_bytes,
 )
 from ..services.agent_orchestrator import (
+    build_match_conversation_summary,
     execution_intro,
-    infer_explicit_workflow,
+    jd_conversation_reply,
     missing_context_reply,
+    opening_suggestions,
     parse_application_update,
+    welcome_message,
 )
 
 from pydantic import BaseModel
@@ -427,6 +430,20 @@ def get_job(job_id: int, db: Session = Depends(get_db)):
         if lead and lead.source_url:
             job.workflow_data = {**(job.workflow_data or {}), "source_url": lead.source_url}
     return job
+
+@app.get("/api/jobs/{job_id}/opening")
+def get_job_opening(job_id: int, db: Session = Depends(get_db)):
+    job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    workflow_data = job.workflow_data or {}
+    analysis = workflow_data.get("jd_analysis_result") or {}
+    apply_status = workflow_data.get("apply_status") or {}
+    suggestions = opening_suggestions(bool(apply_status.get("applied")))
+    return {
+        "message": welcome_message(job.company, job.role, bool(job.jd_content), analysis),
+        "suggestions": suggestions,
+    }
 
 @app.delete("/api/jobs/{job_id}")
 def delete_job(job_id: int, db: Session = Depends(get_db)):
@@ -841,7 +858,14 @@ def build_ai_run_summary(workflow_name: str, card_content: str, card_data: dict)
 class AgentBrain:
     @staticmethod
     async def process(msg: str, context: dict = None) -> dict:
+        from ..agents import get_agent_catalog, normalize_supervisor_decision
+
         client = AsyncOpenAI(api_key=API_KEY, base_url=BASE_URL)
+        supervisor_prompt = (
+            ROUTER_PROMPT
+            + "\n\n# Runtime specialist Agent catalog\n"
+            + json.dumps(get_agent_catalog(), ensure_ascii=False)
+        )
         
         # Inject context if provided
         if context:
@@ -853,7 +877,7 @@ class AgentBrain:
             response = await client.chat.completions.create(
                 model=MODEL_NAME,
                 messages=[
-                    {"role": "system", "content": ROUTER_PROMPT},
+                    {"role": "system", "content": supervisor_prompt},
                     {"role": "user", "content": user_msg}
                 ],
                 temperature=0.0,
@@ -867,20 +891,14 @@ class AgentBrain:
             if json_match:
                 text = json_match.group(0)
                 
-            parsed = json.loads(text)
-            
-            return {
-                "intent": parsed.get("intent", "GUIDE"),
-                "reply": parsed.get("reply", "Thank you for reaching out! I am interested."),
-                "workflow": parsed.get("workflow"),
-                "missing_context": parsed.get("missing_context", [])
-            }
+            return normalize_supervisor_decision(json.loads(text), msg)
         except Exception as e:
             return {
-                "intent": "GUIDE",
-                "reply": "我理解你的目标了。你可以直接告诉我想完成的任务，我会选择合适的 Agent；如果信息不足，我只会追问最关键的一项。",
+                "intent": "ERROR",
+                "reply": "我暂时无法连接推理服务，因此还不能可靠地理解这句话。请稍后重试；我不会假装已经理解，也不会擅自执行错误的操作。",
                 "workflow": None,
-                "missing_context": []
+                "missing_context": [],
+                "error_type": type(e).__name__,
             }
 
 @app.get("/api/jobs/{job_id}/chat")
@@ -918,27 +936,9 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
     job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
     has_base_resume = bool(profile and profile.base_resume)
     
-    if req.message in ["start_job_search", "start_boss_search", "去BOSS直聘搜索", "生成打招呼语"]:
+    if req.message in ["start_job_search", "start_boss_search"]:
         req.system_workflow = "GreetingGeneration"
         req.is_system_trigger = True
-    elif req.message in ["匹配度分析", "开始匹配度分析"]:
-        req.system_workflow = "JobMatching"
-        req.is_system_trigger = True
-    elif req.message in ["开始优化简历", "优化简历"]:
-        req.system_workflow = "ResumeOptimization"
-        req.is_system_trigger = True
-    elif req.message in ["开始生成简历", "生成最终版简历文档"]:
-        req.system_workflow = "ContentGeneration"
-        req.is_system_trigger = True
-    elif req.message in ["面试准备", "开始面试准备", "生成面试预测题", "帮我生成预测题"]:
-        req.system_workflow = "InterviewPrep"
-        req.is_system_trigger = True
-    elif req.message in ["开始复盘"]:
-        req.system_workflow = "Reflection"
-        req.is_system_trigger = True
-
-    if not req.system_workflow and not req.is_system_trigger:
-        req.system_workflow = infer_explicit_workflow(req.message)
 
     if req.system_workflow:
         intent = "EXECUTE"
@@ -981,9 +981,12 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                 },
             )
 
-    if intent == "EXECUTE" and not workflow:
+    if intent == "ERROR":
         intent = "GUIDE"
-        reply = reply or "我还不能确定要调用哪个 Agent。你希望我分析岗位、优化简历、准备面试，还是生成投递话术？"
+        workflow = None
+    elif intent == "EXECUTE" and not workflow:
+        intent = "GUIDE"
+        reply = reply or "我还不能确定你想完成哪件事。你希望我分析岗位、优化简历、准备面试，还是生成投递话术？"
 
     if intent == "EXECUTE" and workflow:
         missing_reply = missing_context_reply(
@@ -1021,6 +1024,8 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
     
     async def event_generator():
         brain_log = f"Agent Brain: {intent} - Workflow: {workflow}"
+        display_as_conversation = False
+        suppress_execution_trace = False
 
         # --- State 1: GUIDE (Interaction & Clarification) ---
         if intent == "GUIDE":
@@ -1051,8 +1056,8 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         ai_run = start_ai_run(db, job_id, workflow, agent_name, req.message or "")
 
         if workflow == "ResumeOptimization":
-            main_title = "Optimizing resume for JD..."
-            yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['Analyzing JD...', 'Parsing resume...', 'Matching STAR...', 'Generating...'], 'logs': [brain_log, 'Skill: Loaded ResumeOptimizer', 'Executing Real LLM Call...']}})}\n\n"
+            main_title = "正在整理简历修改建议，请稍等…"
+            yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['读取岗位重点', '梳理简历经历', '筛选可强化的证据', '生成修改建议'], 'logs': [brain_log, 'Skill: Loaded ResumeOptimizer', 'Executing Real LLM Call...']}})}\n\n"
             
             from .workflow_engine import SkillExecutor
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
@@ -1066,7 +1071,7 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                 else:
                     opt_res = result.get("result", {}).get("resume_optimization_result", {})
                     summary = opt_res.get("optimization_summary", "Summary unavailable")
-                    card_content = f"Optimization: {summary}"
+                    card_content = f"我已经整理出 {len(opt_res.get('optimization_patches', []))} 条可逐项确认的简历修改建议。"
                     # Provide patches instead of markdown
                     patches = opt_res.get("optimization_patches", [])
                     card_data = {
@@ -1092,7 +1097,7 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
                 result = await SkillExecutor.execute_interview_prep(job, db, req.message, round_id=req.round_id)
-                if "error" not in result:
+                if result.get("status") != "error" and "error" not in result:
                     job.status = "面试中"
                     db.commit()
                     prep_res = result.get("result", {}).get("interview_prep_result", {})
@@ -1162,8 +1167,8 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             steps = []
             dev_logs = []
         elif workflow == "JobMatching":
-            main_title = "Matching job requirements..."
-            yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['Analyzing JD', 'Matching resume', 'Calculating score'], 'logs': [brain_log, 'Skill: Loaded JobMatching', 'Executing Real LLM Call...']}})}\n\n"
+            main_title = "正在分析岗位匹配度，请稍等…"
+            yield f"data: {json.dumps({'type': 'progress', 'content': main_title, 'data': {'steps': ['读取岗位核心要求', '对照你的简历经历', '评估优势与能力差距', '整理匹配结论'], 'logs': [brain_log, 'Skill: Loaded JobMatching', 'Executing Real LLM Call...']}})}\n\n"
             await asyncio.sleep(0.5)
             
             from .workflow_engine import SkillExecutor
@@ -1180,26 +1185,20 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                     score_breakdown = match_res.get("score_breakdown", {})
                     score = score_breakdown.get("total", "?")
                     
-                    is_rec = isinstance(score, int) and score >= 70
-                    summary = "推荐投递" if is_rec else "不推荐投递"
-                    
                     must = match_res.get("must_skill_match", [])
                     missing = match_res.get("missing_skills", [])
                     reason = match_res.get("reason", "")
-                    
-                    must_str = "、".join(must) if must else "无"
-                    missing_str = "、".join(missing) if missing else "无"
                     
                     # Persist the match score
                     if isinstance(score, (int, float)):
                         job.match_score = int(score)
                         db.commit()
 
-                    card_content = "匹配度分析完成"
+                    card_content = build_match_conversation_summary(match_res)
                     
                     card_data = {
                         "progress": 100, 
-                        "sidebar_summary": f"Score: {score}% | Matched: {len(must)} | Missing: {len(missing)}",
+                        "sidebar_summary": f"匹配度 {score}% · 优势 {len(must)} 项 · 待补强 {len(missing)} 项",
                         "match_data": {
                             "score": score,
                             "matching_skills": must,
@@ -1230,20 +1229,10 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                     card_data = {}
                 else:
                     jd_res = result.get("result", {}).get("jd_analysis_result", {})
-                    role = jd_res.get("role", "Unknown Role")
-                    skills = jd_res.get("skills", [])
-                    core_skill = skills[0].get("name", "") if skills else "Unknown"
-                    job_summary = jd_res.get("job_summary", "")
-                    card_content = f"""【岗位名称】{role}
-【岗位摘要】{job_summary}
-【核心技能】{core_skill}
-【技能清单】
-"""
-                    for s in skills:
-                        card_content += f"- {s.get("name", "")} ({s.get("type", "")})\n"
-                    card_type = "ExecutionSummary"
-                    card_data = {"details": [{"label": "岗位分析结果", "value": card_content}]}
-                    suggestions = ["匹配度分析", "生成打招呼语"]
+                    card_content = jd_conversation_reply(job.company, job.role, jd_res)
+                    card_data = {"sidebar_summary": "已在对话中完成岗位简析"}
+                    suggestions = ["判断是否值得投", "直接优化简历", "准备面试", "生成投递话术"]
+                    display_as_conversation = True
             else:
                 card_content = "Task completed."
                 card_data = {}
@@ -1323,9 +1312,13 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             steps = []
             dev_logs = []
         elif workflow == "UpdateJobCase":
-            main_title = "正在更新投递记录..."
-            steps = ["识别投递时间", "设置跟进提醒", "更新求职日程"]
-            dev_logs = [brain_log, "Database: Updating application status"]
+            # A small record update should read like a normal conversation,
+            # not a visible workflow or a generated result artifact.
+            main_title = ""
+            steps = []
+            dev_logs = []
+            display_as_conversation = True
+            suppress_execution_trace = True
             job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
             if job:
                 from datetime import datetime
@@ -1353,18 +1346,23 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                     event_data=apply_status,
                 ))
                 db.commit()
-                summary_parts = ["投递状态已记录"]
+                summary_parts = ["已经帮你更新了这条求职记录"]
                 if apply_status["apply_time"]:
-                    summary_parts.append(f"投递日期：{apply_status['apply_time']}")
+                    summary_parts.append(f"投递日期是 {apply_status['apply_time']}")
                 if apply_status["reminder_time"]:
-                    summary_parts.append(f"跟进提醒：{apply_status['reminder_time']}")
-                card_content = "；".join(summary_parts)
+                    summary_parts.append(f"跟进提醒设在 {apply_status['reminder_time']}")
+                card_content = "，".join(summary_parts) + "。"
+                if apply_status["link"]:
+                    card_content += "投递链接也已经保存，之后可以直接从这里打开。"
+                    suggestions = ["查看投递进度", "调整提醒时间", "准备面试"]
+                else:
+                    card_content += "为了方便后续一键跳转，需要我同时记录投递链接吗？你可以直接把链接发给我。"
+                    suggestions = ["补充投递链接", "调整提醒时间", "准备面试"]
                 card_data = {
                     "apply_status": apply_status,
                     "sidebar_summary": card_content,
-                    "suggestions": ["查看投递记录", "修改提醒时间", "准备面试"],
+                    "suggestions": suggestions,
                 }
-                suggestions = card_data["suggestions"]
             else:
                 card_content = "Error: Job Case 不存在"
                 card_data = {}
@@ -1376,23 +1374,24 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
             yield f"data: {json.dumps({'type': 'text', 'content': fallback_reply, 'data': {'suggestions': suggestions}})}\n\n"
             return
 
-        # Yield Main Status
-        yield f"data: {json.dumps({'type': 'main_status', 'content': main_title})}\n\n"
-        await asyncio.sleep(0.5)
+        if not suppress_execution_trace:
+            # Yield Main Status
+            yield f"data: {json.dumps({'type': 'main_status', 'content': main_title})}\n\n"
+            await asyncio.sleep(0.5)
 
-        # Yield Dev Logs
-        for log in dev_logs[:2]:
-            yield f"data: {json.dumps({'type': 'dev_log', 'content': log})}\n\n"
-        
-        # Second Layer: Steps
-        for i, step in enumerate(steps):
-            yield f"data: {json.dumps({'type': 'sub_status', 'content': step, 'status': 'running'})}\n\n"
-            await asyncio.sleep(0.8)
-            yield f"data: {json.dumps({'type': 'sub_status', 'content': step, 'status': 'done'})}\n\n"
-            if i + 2 < len(dev_logs):
-                yield f"data: {json.dumps({'type': 'dev_log', 'content': dev_logs[i+2]})}\n\n"
+            # Yield Dev Logs
+            for log in dev_logs[:2]:
+                yield f"data: {json.dumps({'type': 'dev_log', 'content': log})}\n\n"
 
-        yield "data: " + json.dumps({"type": "main_status", "content": "Processing..."}) + "\n\n"
+            # Second Layer: Steps
+            for i, step in enumerate(steps):
+                yield f"data: {json.dumps({'type': 'sub_status', 'content': step, 'status': 'running'})}\n\n"
+                await asyncio.sleep(0.8)
+                yield f"data: {json.dumps({'type': 'sub_status', 'content': step, 'status': 'done'})}\n\n"
+                if i + 2 < len(dev_logs):
+                    yield f"data: {json.dumps({'type': 'dev_log', 'content': dev_logs[i+2]})}\n\n"
+
+            yield "data: " + json.dumps({"type": "main_status", "content": "Processing..."}) + "\n\n"
             
         # Final Card
         # Phase 8: Attach agent metadata
@@ -1413,6 +1412,18 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         )
         card_data["agent"] = agent_name
         card_data["ai_run_id"] = completed_run.id if completed_run else ai_run.id
+        if display_as_conversation and not is_error_card:
+            message_data = {
+                "phase": "result",
+                "workflow": workflow,
+                "agent": agent_name,
+                "suggestions": suggestions,
+                "ai_run_id": card_data["ai_run_id"],
+            }
+            yield f"data: {json.dumps({'type': 'text', 'content': card_content, 'data': message_data})}\n\n"
+            db.add(models.ChatMessage(job_case_id=job_id, role="agent", content=card_content))
+            db.commit()
+            return
         card = {
             "type": "card",
             "card_type": card_type,

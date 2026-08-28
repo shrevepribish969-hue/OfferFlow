@@ -90,6 +90,10 @@ For every rewrite, internally assign confidence:
 - `target_name` should be the company, project, or school name.
 - `original` must perfectly match the existing substring in the resume so it can be replaced.
 - **LANGUAGE**: `optimization_summary` and `reason` MUST be written entirely in Chinese. Do not use English phrases like "Level A: Direct evidence". Use Chinese equivalents like "证据等级A：直接证据".
+- **STANDALONE RESUME LANGUAGE**: Every `suggestion` must read like natural resume content on its own. Never mention the target job, target company, JD, matching degree, similarity, gaps, risks, or phrases such as “为了匹配”“与目标岗位相关/相似”“契合岗位要求”. Relevance must be conveyed implicitly through truthful actions, methods, scope, and outcomes.
+- **NO META POSITIONING**: Do not insert evaluative company positioning such as “头部企业”“行业领先” unless those exact facts already appear in the source resume and are necessary to understand the work.
+- **ACTION–METHOD–RESULT**: Prefer concise action–method–result writing. Do not explain inside the resume why a sentence helps the application; that explanation belongs only in `reason`.
+- Do not return a patch whose `suggestion` is empty or whitespace-only.
 
 # 7. Examples (GOOD vs BAD)
 
