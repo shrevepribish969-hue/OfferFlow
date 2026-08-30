@@ -47,6 +47,19 @@ def safe_model_error(exc: Exception) -> str:
         return "模型服务额度不足或请求过于频繁，请检查账户余额后稍后重试。"
     return f"模型服务暂时不可用（{exc.__class__.__name__}），请稍后重试。"
 
+
+def resume_source_for_job(job: models.JobCase, db_session) -> str:
+    """Return the resume scoped to a job.
+
+    Public demo jobs carry a synthetic resume in their own workflow data.  It
+    must never fall through to the owner's single local profile.
+    """
+    workflow_data = job.workflow_data or {}
+    if workflow_data.get("demo"):
+        return json.dumps(workflow_data.get("demo_resume") or {}, ensure_ascii=False)
+    profile = db_session.query(models.UserProfile).first()
+    return profile.base_resume if profile and profile.base_resume else "{}"
+
 class SkillExecutor:
     @staticmethod
     async def _call_llm_bounded(
@@ -407,8 +420,8 @@ class SkillExecutor:
     async def execute_resume_optimization(job: models.JobCase, db_session) -> dict:
         """Executes the real Resume Optimization prompt."""
         # 1. Fetch user base resume
-        profile = db_session.query(models.UserProfile).first()
-        if not profile or not profile.base_resume:
+        resume_source = resume_source_for_job(job, db_session)
+        if not resume_source or resume_source == "{}":
             return SkillExecutor._format_error("resume_optimization", "1.0", "MISSING_RESUME", "No base resume found.")
             
         # 2. Check if JD Analysis exists
@@ -426,9 +439,9 @@ class SkillExecutor:
             
         import json
         try:
-            resume_json = normalize_resume_schema(json.loads(profile.base_resume))
+            resume_json = normalize_resume_schema(json.loads(resume_source))
         except:
-            resume_json = normalize_resume_schema(profile.base_resume)
+            resume_json = normalize_resume_schema(resume_source)
             
         system_prompt = load_prompt("260713Prompt_Resume_Optimization.md")
         
@@ -457,14 +470,13 @@ class SkillExecutor:
             job.workflow_data = w_data
             SkillExecutor.append_timeline_event(db_session, job.id, "ResumeOptimized", {"skill_version": "1.0"})
             # Phase 4: Save as first-class ResumeVersion
-            profile = db_session.query(models.UserProfile).first()
             existing_count = db_session.query(models.ResumeVersion).filter(
                 models.ResumeVersion.job_case_id == job.id
             ).count()
             rv = models.ResumeVersion(
                 job_case_id=job.id,
                 version_number=existing_count + 1,
-                base_resume_snapshot=profile.base_resume if profile else None,
+                base_resume_snapshot=resume_source,
                 optimization_patches=clean_patches,
                 optimization_summary=res_opt.get("optimization_summary", ""),
             )
@@ -507,9 +519,10 @@ class SkillExecutor:
         logger.info("InterviewPrep: lexical retrieval completed with %s questions", len(top_questions))
         
         # 2. Fetch User Global Story Bank
-        user = db_session.query(models.UserProfile).first()
+        is_demo = bool((job.workflow_data or {}).get("demo"))
+        user = None if is_demo else db_session.query(models.UserProfile).first()
         user_id = user.id if user else 1
-        story_cards = db_session.query(models.StoryCard).filter(models.StoryCard.user_id == user_id).all()
+        story_cards = [] if is_demo else db_session.query(models.StoryCard).filter(models.StoryCard.user_id == user_id).all()
         
         # 3. Programmatic Story Mapping
         def calculate_story_score(story: models.StoryCard, q_competency: str) -> int:
@@ -594,8 +607,8 @@ class SkillExecutor:
         
         # Only user-confirmed memories may influence future generations.
         from ..services.memory_service import MemoryService
-        profile = db_session.query(models.UserProfile).filter(models.UserProfile.id == user_id).first()
-        confirmed_memory = MemoryService.get_context(db_session, user_id=user_id)
+        profile = None if is_demo else db_session.query(models.UserProfile).filter(models.UserProfile.id == user_id).first()
+        confirmed_memory = {} if is_demo else MemoryService.get_context(db_session, user_id=user_id)
         logger.info("InterviewPrep: memory and story context loaded")
         weakness_memory = confirmed_memory.get("weaknesses", []) + confirmed_memory.get("systemic_weaknesses", [])
 
@@ -670,7 +683,7 @@ class SkillExecutor:
             }
             for story in ranked_stories
         ]
-        resume_payload = profile.base_resume if profile else {}
+        resume_payload = resume_source_for_job(job, db_session)
         if isinstance(resume_payload, str):
             try:
                 resume_payload = normalize_resume_schema(json.loads(resume_payload))
@@ -757,8 +770,7 @@ class SkillExecutor:
 
     @staticmethod
     async def execute_job_matching(job: models.JobCase, db_session) -> dict:
-        profile = db_session.query(models.UserProfile).first()
-        resume_text = profile.base_resume if profile else ""
+        resume_text = resume_source_for_job(job, db_session)
         
         system_prompt = load_prompt("260713Prompt_Job_Matching.md")
         
@@ -855,8 +867,7 @@ class SkillExecutor:
         w_data = job.workflow_data or {}
         
         # 1. Load the original base resume
-        profile = db_session.query(models.UserProfile).first()
-        base_resume_str = profile.base_resume if profile else "{}"
+        base_resume_str = resume_source_for_job(job, db_session)
         
         # 2. Apply patches if they exist safely on JSON object
         import json
@@ -937,8 +948,7 @@ class SkillExecutor:
         w_data = job.workflow_data or {}
         jd_content = job.jd_content or ""
         
-        profile = db_session.query(models.UserProfile).first()
-        resume_json = normalize_resume_schema(profile.base_resume if profile else "{}")
+        resume_json = normalize_resume_schema(resume_source_for_job(job, db_session))
         
         jd_analysis_result = w_data.get("jd_analysis_result", {})
         job_matching_result = w_data.get("job_matching_result", {})
@@ -967,15 +977,16 @@ class SkillExecutor:
         w_data = job.workflow_data or {}
         jd_result = w_data.get("jd_analysis_result", {})
 
-        profile = db_session.query(models.UserProfile).first()
-        resume_payload = profile.base_resume if profile else {}
+        is_demo = bool((job.workflow_data or {}).get("demo"))
+        profile = None if is_demo else db_session.query(models.UserProfile).first()
+        resume_payload = resume_source_for_job(job, db_session)
         if isinstance(resume_payload, str):
             try:
                 resume_payload = normalize_resume_schema(json.loads(resume_payload))
             except json.JSONDecodeError:
                 resume_payload = normalize_resume_schema(resume_payload)
 
-        story_cards = db_session.query(models.StoryCard).filter(
+        story_cards = [] if is_demo else db_session.query(models.StoryCard).filter(
             models.StoryCard.user_id == (profile.id if profile else 1)
         ).all()
         

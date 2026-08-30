@@ -4,9 +4,10 @@ import { Send, Link as LinkIcon, Calendar, Clock, CheckCircle } from 'lucide-rea
 interface ApplicationWorkViewProps {
   job: any;
   onComplete: () => void;
+  apiBase?: string;
 }
 
-export const ApplicationWorkView = ({ job, onComplete }: ApplicationWorkViewProps) => {
+export const ApplicationWorkView = ({ job, onComplete, apiBase = "/backend-api/jobs" }: ApplicationWorkViewProps) => {
   const [applied, setApplied] = useState(false);
   const [link, setLink] = useState('');
   const [applyTime, setApplyTime] = useState('');
@@ -27,7 +28,7 @@ export const ApplicationWorkView = ({ job, onComplete }: ApplicationWorkViewProp
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await fetch(`/backend-api/jobs/${job.id}/apply`, {
+      await fetch(`${apiBase}/${job.id}/apply`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

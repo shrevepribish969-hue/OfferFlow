@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { X, Sparkles } from "lucide-react";
 import { JobOverviewHeader } from "@/components/workspace/JobOverviewHeader";
 import { WorkflowStage } from "@/components/workspace/WorkflowSidebar";
@@ -84,6 +84,8 @@ const sanitizeAssistantText = (value: unknown) => {
 
 export default function WorkspaceV3() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const apiBase = searchParams.get("demo") === "1" ? "/backend-api/demo/jobs" : "/backend-api/jobs";
   
   const [job, setJob] = useState<JobCase | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -108,7 +110,7 @@ export default function WorkspaceV3() {
 
   const fetchFeedbackEvents = async (jobId: string | number) => {
     try {
-      const res = await fetch(`/backend-api/jobs/${jobId}/feedback`);
+      const res = await fetch(`${apiBase}/${jobId}/feedback`);
       if (res.ok) {
         const data = await res.json();
         setFeedbackEvents(data);
@@ -120,7 +122,7 @@ export default function WorkspaceV3() {
 
   const fetchAiRuns = async (jobId: string | number) => {
     try {
-      const res = await fetch(`/backend-api/jobs/${jobId}/ai_runs`);
+      const res = await fetch(`${apiBase}/${jobId}/ai_runs`);
       if (res.ok) {
         const data = await res.json();
         setAiRuns(data);
@@ -133,12 +135,12 @@ export default function WorkspaceV3() {
   // Fetch Job & Chat History
   useEffect(() => {
     if (params?.id) {
-      fetch(`/backend-api/jobs/${params.id}`)
+      fetch(`${apiBase}/${params.id}`)
         .then((res) => res.json())
         .then((data) => setJob(data))
         .catch((err) => console.error(err));
 
-      fetch(`/backend-api/jobs/${params.id}/chat`)
+      fetch(`${apiBase}/${params.id}/chat`)
         .then((res) => res.json())
         .then((history) => {
           if (history && history.length > 0) {
@@ -181,7 +183,7 @@ export default function WorkspaceV3() {
           setChatLoaded(true);
         });
 
-      fetch(`/backend-api/jobs/${params.id}/opening`)
+      fetch(`${apiBase}/${params.id}/opening`)
         .then((res) => {
           if (!res.ok) throw new Error(`opening request failed: ${res.status}`);
           return res.json();
@@ -198,7 +200,7 @@ export default function WorkspaceV3() {
       fetchFeedbackEvents(params.id as string);
       fetchAiRuns(params.id as string);
     }
-  }, [params]);
+  }, [params, apiBase]);
 
   useEffect(() => {
     if (!chatLoaded || !openingLoaded || !job) return;
@@ -276,7 +278,7 @@ export default function WorkspaceV3() {
     const requestTimeout = window.setTimeout(() => requestController.abort(), requestTimeoutMs);
 
     try {
-      const response = await fetch(`/backend-api/jobs/${job.id}/chat`, {
+      const response = await fetch(`${apiBase}/${job.id}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: textToSubmit || "system_trigger", is_system_trigger: isSystemTrigger, system_workflow: systemWorkflow, round_id: roundId }),
@@ -479,7 +481,7 @@ export default function WorkspaceV3() {
   const handleSubmitFeedback = async (payload: { message_id?: string; card_type?: string; feedback: string; feedback_type?: string; feedback_code?: string; feedback_category?: string; ai_run_id?: number }) => {
     if (!job) return;
     try {
-      const res = await fetch(`/backend-api/jobs/${job.id}/feedback`, {
+      const res = await fetch(`${apiBase}/${job.id}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -557,6 +559,7 @@ export default function WorkspaceV3() {
         return (
           <ApplicationWorkView 
             job={job}
+            apiBase={apiBase}
             onComplete={() => handleStageComplete("interview_1")}
           />
         );
@@ -603,10 +606,11 @@ export default function WorkspaceV3() {
         return (
           <OfferWorkView
             job={job}
+            apiBase={apiBase}
             onStatusUpdated={() => {
               // Reload job case to reflect updated status
               if (params.id) {
-                fetch(`/backend-api/jobs`)
+                fetch(apiBase)
                   .then((res) => res.json())
                   .then((jobs) => {
                     const currentJob = jobs.find((j: any) => j.id === Number(params.id));

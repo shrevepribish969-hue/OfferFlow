@@ -9,6 +9,12 @@ function unauthorized() {
 }
 
 export function proxy(request: NextRequest) {
+  const isPublicDemo = request.nextUrl.pathname === "/demo"
+    || request.nextUrl.pathname.startsWith("/demo/")
+    || request.nextUrl.pathname.startsWith("/backend-api/demo/")
+    || (request.nextUrl.pathname.startsWith("/workspace/") && request.nextUrl.searchParams.get("demo") === "1");
+  if (isPublicDemo) return NextResponse.next();
+
   const expectedPassword = process.env.APP_PASSWORD;
 
   // Keep local development frictionless, but never expose a Render deployment

@@ -96,7 +96,10 @@ def _has_valid_basic_auth(request: Request) -> bool:
 
 @app.middleware("http")
 async def require_personal_access(request: Request, call_next):
-    if request.url.path == "/health" or request.method == "OPTIONS":
+    # The public demo is deliberately isolated from the personal workspace.
+    # It only exposes rows marked as demo data (see the routes near the end of
+    # this module), so it can be shared without sharing the owner's account.
+    if request.url.path == "/health" or request.url.path.startswith("/api/demo") or request.method == "OPTIONS":
         return await call_next(request)
     if not _has_valid_basic_auth(request):
         return JSONResponse(
@@ -113,7 +116,10 @@ def health_check():
 
 @app.get("/api/jobs")
 def get_jobs(db: Session = Depends(get_db)):
-    jobs = db.query(models.JobCase).order_by(models.JobCase.updated_at.desc()).all()
+    jobs = [
+        job for job in db.query(models.JobCase).order_by(models.JobCase.updated_at.desc()).all()
+        if not (job.workflow_data or {}).get("demo")
+    ]
     # Older promoted leads kept the original URL on JobLead, so expose it
     # through workflow_data without requiring a destructive database migration.
     lead_links = {
@@ -128,7 +134,7 @@ def get_jobs(db: Session = Depends(get_db)):
 
 @app.get("/api/export")
 def export_data(db: Session = Depends(get_db)):
-    jobs = db.query(models.JobCase).all()
+    jobs = [job for job in db.query(models.JobCase).all() if not (job.workflow_data or {}).get("demo")]
     profile = db.query(models.UserProfile).first()
     messages = db.query(models.ChatMessage).all()
     stories = db.query(models.StoryCard).all()
@@ -423,7 +429,7 @@ async def create_job(job: JobCreate, db: Session = Depends(get_db)):
 @app.get("/api/jobs/{job_id}")
 def get_job(job_id: int, db: Session = Depends(get_db)):
     job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
-    if not job:
+    if not job or (job.workflow_data or {}).get("demo"):
         raise HTTPException(status_code=404, detail="Job not found")
     if not (job.workflow_data or {}).get("source_url"):
         lead = db.query(models.JobLead).filter(models.JobLead.promoted_job_case_id == job_id).first()
@@ -931,10 +937,12 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
         import traceback
         traceback.print_exc()
 
-    # Fetch profile for context
-    profile = db.query(models.UserProfile).first()
     job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
-    has_base_resume = bool(profile and profile.base_resume)
+    # Public Demo jobs carry a fake candidate profile in their own scoped
+    # workflow data. Never use the owner's profile while serving a demo.
+    is_demo = bool(job and (job.workflow_data or {}).get("demo"))
+    profile = None if is_demo else db.query(models.UserProfile).first()
+    has_base_resume = bool((job.workflow_data or {}).get("demo_resume")) if is_demo else bool(profile and profile.base_resume)
     
     if req.message in ["start_job_search", "start_boss_search"]:
         req.system_workflow = "GreetingGeneration"
@@ -1465,6 +1473,161 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
                     asyncio.create_task(_exec_fn(_next_job, db))
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+# ---------------------------------------------------------------------------
+# Public product demo
+# ---------------------------------------------------------------------------
+# Demo data lives in the same database for now, but every public route below
+# only ever reads records explicitly marked with ``workflow_data.demo``.  This
+# keeps a shared link useful without exposing the owner's jobs, resume or chat.
+DEMO_MARKER = "offerflow-public-demo-v1"
+DEMO_RESUME = {
+    "basics": {"name": "林知夏", "target_role": "AI 产品经理"},
+    "education": [{"school": "华中科技大学", "major": "信息管理与信息系统", "degree": "硕士", "period": "2024.09-2027.06"}],
+    "experience": [
+        {"company": "启明教育科技", "role": "产品实习生", "highlights": ["参与课堂分析产品从需求调研到上线，结合音视频与教案信息设计报告链路。", "使用 SQL 分析核心功能使用情况，协同算法与研发迭代生成质量。"]},
+        {"company": "校园 AI 创新实验室", "role": "产品负责人", "highlights": ["组织 5 人小组完成知识库问答工具，负责用户访谈、Prompt 设计和效果评估。"]},
+    ],
+    "skills": ["产品需求分析", "用户研究", "SQL", "数据分析", "Prompt Engineering", "LLM 应用"],
+}
+
+DEMO_JOB_SEEDS = [
+    {
+        "company": "讯飞智文", "role": "AI 产品经理（校招）", "status": "简历优化中", "match_score": 86,
+        "jd_content": "负责大模型教育产品的需求分析、产品设计和迭代；需要产品思维、数据分析能力，理解 LLM、RAG、Prompt 等 AI 应用能力。",
+    },
+    {
+        "company": "云帆科技", "role": "内容产品运营实习生", "status": "已投递", "match_score": 79,
+        "jd_content": "参与内容社区增长与创作者运营，基于用户反馈和数据分析推动产品体验优化；需要良好的沟通、内容理解和数据敏感度。",
+    },
+    {
+        "company": "星河数据", "role": "数据产品实习生", "status": "面试中", "match_score": 83,
+        "jd_content": "负责指标体系、数据工具与业务分析产品建设，和算法、研发团队协作落地；熟悉 SQL，能够拆解业务问题。",
+    },
+]
+
+
+def _is_demo_job(job: models.JobCase | None) -> bool:
+    return bool(job and (job.workflow_data or {}).get("demo") is True)
+
+
+def _get_demo_job_or_404(job_id: int, db: Session) -> models.JobCase:
+    job = db.query(models.JobCase).filter(models.JobCase.id == job_id).first()
+    if not _is_demo_job(job):
+        raise HTTPException(status_code=404, detail="Demo job not found")
+    return job
+
+
+def _ensure_demo_jobs(db: Session) -> list[models.JobCase]:
+    jobs = [job for job in db.query(models.JobCase).all() if _is_demo_job(job)]
+    if jobs:
+        return sorted(jobs, key=lambda item: item.id, reverse=True)
+    for index, seed in enumerate(DEMO_JOB_SEEDS):
+        workflow_data = {
+            "demo": True,
+            "demo_marker": DEMO_MARKER,
+            "demo_resume": DEMO_RESUME,
+            "source_url": "https://example.com/offerflow-demo",
+            "apply_status": {"applied": index == 1, "link": "", "apply_time": "", "reminder_time": ""},
+        }
+        job = models.JobCase(**seed, workflow_data=workflow_data, memory_tags=["公开 Demo", "AI 产品"])
+        db.add(job)
+    db.commit()
+    return [job for job in db.query(models.JobCase).all() if _is_demo_job(job)]
+
+
+@app.get("/api/demo/jobs")
+def get_demo_jobs(db: Session = Depends(get_db)):
+    return sorted(_ensure_demo_jobs(db), key=lambda item: item.updated_at or item.created_at, reverse=True)
+
+
+@app.post("/api/demo/jobs")
+def create_demo_job(payload: JobCreate, db: Session = Depends(get_db)):
+    jd_content = payload.jd_content.strip()
+    if not jd_content:
+        raise HTTPException(status_code=400, detail="请先填写岗位描述")
+    job = models.JobCase(
+        company="我的目标公司",
+        role="自定义岗位",
+        status="待分析",
+        jd_content=jd_content,
+        workflow_data={"demo": True, "demo_marker": DEMO_MARKER, "demo_resume": DEMO_RESUME},
+        memory_tags=["公开 Demo", "自定义岗位"],
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    return job
+
+
+@app.post("/api/demo/reset")
+def reset_demo(db: Session = Depends(get_db)):
+    jobs = [job for job in db.query(models.JobCase).all() if _is_demo_job(job)]
+    ids = [job.id for job in jobs]
+    if ids:
+        for model in (models.ChatMessage, models.ResumeVersion, models.Interview, models.Reflection, models.TimelineEvent, models.FeedbackEvent, models.AIRun):
+            db.query(model).filter(model.job_case_id.in_(ids)).delete(synchronize_session=False)
+        db.query(models.JobLead).filter(models.JobLead.promoted_job_case_id.in_(ids)).delete(synchronize_session=False)
+        db.query(models.JobCase).filter(models.JobCase.id.in_(ids)).delete(synchronize_session=False)
+        db.commit()
+        # Drop stale ORM identities before recreating the fixed demo seed.
+        db.expunge_all()
+    return {"status": "success", "jobs": _ensure_demo_jobs(db)}
+
+
+@app.get("/api/demo/jobs/{job_id}")
+def get_demo_job(job_id: int, db: Session = Depends(get_db)):
+    return _get_demo_job_or_404(job_id, db)
+
+
+@app.get("/api/demo/jobs/{job_id}/opening")
+def get_demo_opening(job_id: int, db: Session = Depends(get_db)):
+    job = _get_demo_job_or_404(job_id, db)
+    data = job.workflow_data or {}
+    return {"message": welcome_message(job.company, job.role, bool(job.jd_content), data.get("jd_analysis_result") or {}), "suggestions": opening_suggestions(bool((data.get("apply_status") or {}).get("applied")))}
+
+
+@app.get("/api/demo/jobs/{job_id}/chat")
+def get_demo_chat(job_id: int, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return get_chat_history(job_id, db)
+
+
+@app.post("/api/demo/jobs/{job_id}/chat")
+async def demo_chat(job_id: int, req: ChatRequest, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return await chat_with_agent(job_id, req, db)
+
+
+@app.get("/api/demo/jobs/{job_id}/feedback")
+def get_demo_feedback(job_id: int, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return get_job_feedback(job_id, db)
+
+
+@app.post("/api/demo/jobs/{job_id}/feedback")
+def create_demo_feedback(job_id: int, req: FeedbackCreate, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return create_job_feedback(job_id, req, db)
+
+
+@app.get("/api/demo/jobs/{job_id}/ai_runs")
+def get_demo_runs(job_id: int, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return get_job_ai_runs(job_id, db)
+
+
+@app.put("/api/demo/jobs/{job_id}/apply")
+def update_demo_apply(job_id: int, data: ApplyUpdate, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return update_apply(job_id, data, db)
+
+
+@app.put("/api/demo/jobs/{job_id}/offer")
+def update_demo_offer(job_id: int, data: OfferUpdate, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return update_offer(job_id, data, db)
 
 if __name__ == "__main__":
     uvicorn.run(

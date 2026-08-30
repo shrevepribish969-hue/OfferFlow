@@ -4,9 +4,10 @@ import { Award, CheckCircle2, XCircle, Archive, Sparkles, MessageSquare, Save } 
 interface OfferWorkViewProps {
   job: any;
   onStatusUpdated?: () => void;
+  apiBase?: string;
 }
 
-export const OfferWorkView: React.FC<OfferWorkViewProps> = ({ job, onStatusUpdated }) => {
+export const OfferWorkView: React.FC<OfferWorkViewProps> = ({ job, onStatusUpdated, apiBase = "/backend-api/jobs" }) => {
   const [selectedStatus, setSelectedStatus] = useState<string>('Offer Received');
   const [thoughts, setThoughts] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
@@ -26,7 +27,7 @@ export const OfferWorkView: React.FC<OfferWorkViewProps> = ({ job, onStatusUpdat
     setIsSaving(true);
     setSaveSuccess(false);
     try {
-      const res = await fetch(`/backend-api/jobs/${job.id}/offer`, {
+      const res = await fetch(`${apiBase}/${job.id}/offer`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
