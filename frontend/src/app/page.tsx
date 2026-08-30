@@ -28,6 +28,29 @@ interface ScheduleTask {
   completed: boolean;
 }
 
+const JOBS_CACHE_KEY = "offerflow-render-jobs-cache-v1";
+const JOBS_FETCH_TIMEOUT_MS = 90_000;
+const JOBS_RETRY_DELAYS_MS = [12_000, 25_000, 45_000];
+
+function readCachedJobs(): JobCase[] {
+  try {
+    const cached = window.localStorage.getItem(JOBS_CACHE_KEY);
+    if (!cached) return [];
+    const parsed = JSON.parse(cached);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCachedJobs(data: JobCase[]) {
+  try {
+    window.localStorage.setItem(JOBS_CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // Cache is only a resilience layer; the live database remains authoritative.
+  }
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [jobs, setJobs] = useState<JobCase[]>([]);
@@ -168,21 +191,33 @@ export default function Dashboard() {
   const chartData = getChartData();
 
   // Fetch jobs from FastAPI backend
-  const fetchJobs = async () => {
+  const fetchJobs = async (attempt = 0, background = false) => {
     try {
-      setIsLoading(true);
-      setJobsLoadError(null);
+      if (!background) setIsLoading(true);
       const response = await fetch("/backend-api/jobs", {
-        signal: AbortSignal.timeout(10000),
+        cache: "no-store",
+        signal: AbortSignal.timeout(JOBS_FETCH_TIMEOUT_MS),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setJobs(data);
+      writeCachedJobs(data);
+      setJobsLoadError(null);
     } catch (error) {
       console.error("Failed to fetch jobs:", error);
-      setJobsLoadError("岗位数据暂时无法连接，请确认后端服务已启动后重试。");
+      const cachedJobs = readCachedJobs();
+      if (cachedJobs.length > 0) {
+        setJobs(cachedJobs);
+        setJobsLoadError("线上服务正在唤醒，已先显示上次成功加载的数据。");
+      } else {
+        setJobsLoadError("线上服务正在唤醒，正在自动重试。");
+      }
+      const delay = JOBS_RETRY_DELAYS_MS[attempt];
+      if (delay) {
+        window.setTimeout(() => fetchJobs(attempt + 1, true), delay);
+      }
     } finally {
-      setIsLoading(false);
+      if (!background) setIsLoading(false);
     }
   };
 
@@ -258,7 +293,7 @@ export default function Dashboard() {
       {jobsLoadError && (
         <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
           <span>{jobsLoadError}</span>
-          <button onClick={fetchJobs} className="shrink-0 font-bold hover:text-red-900">重新加载</button>
+          <button onClick={() => fetchJobs()} className="shrink-0 font-bold hover:text-red-900">重新加载</button>
         </div>
       )}
 
