@@ -40,8 +40,10 @@ function writeCachedJobs(data: JobCase[]) {
   }
 }
 
-export default function JobsPage() {
+export function JobsPage({ demoMode = false }: { demoMode?: boolean }) {
   const router = useRouter();
+  const apiBase = demoMode ? "/backend-api/demo/jobs" : "/backend-api/jobs";
+  const workspaceHref = (jobId: number) => `/workspace/${jobId}${demoMode ? "?demo=1" : ""}`;
   const [jobs, setJobs] = useState<JobCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [jobsLoadError, setJobsLoadError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function JobsPage() {
   const fetchJobs = async (attempt = 0, background = false) => {
     try {
       if (!background) setIsLoading(true);
-      const response = await fetch("/backend-api/jobs", {
+      const response = await fetch(apiBase, {
         cache: "no-store",
         signal: AbortSignal.timeout(JOBS_FETCH_TIMEOUT_MS),
       });
@@ -83,12 +85,12 @@ export default function JobsPage() {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [apiBase]);
 
   const handleDeleteJob = async (jobId: number, e: React.MouseEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/backend-api/jobs/${jobId}`, {
+      const response = await fetch(`${apiBase}/${jobId}`, {
         method: "DELETE"
       });
       if (response.ok) {
@@ -103,7 +105,7 @@ export default function JobsPage() {
     e.preventDefault();
     e.stopPropagation();
     try {
-      const response = await fetch(`/backend-api/jobs/${jobId}/status`, {
+      const response = await fetch(`${apiBase}/${jobId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -120,7 +122,7 @@ export default function JobsPage() {
     if (!jdContent.trim()) return;
     try {
       setIsSubmitting(true);
-      const response = await fetch("/backend-api/jobs", {
+      const response = await fetch(apiBase, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jd_content: jdContent })
@@ -129,7 +131,7 @@ export default function JobsPage() {
         const newJob = await response.json();
         setIsModalOpen(false);
         setJdContent("");
-        router.push(`/workspace/${newJob.id}`);
+        router.push(workspaceHref(newJob.id));
       }
     } catch (error) {
       console.error("Failed to create job:", error);
@@ -140,6 +142,10 @@ export default function JobsPage() {
 
   const handleExportData = async () => {
     try {
+      if (demoMode) {
+        alert("Demo 数据仅用于体验，无需导出。");
+        return;
+      }
       const response = await fetch("/backend-api/export_local", {
         method: "POST"
       });
@@ -256,7 +262,7 @@ export default function JobsPage() {
               key={job.id} 
               className="flex items-center p-4 border-b border-border hover:bg-slate-50/80 transition group relative"
             >
-               <Link href={`/workspace/${job.id}`} className="flex items-center gap-4 w-[280px]">
+               <Link href={workspaceHref(job.id)} className="flex items-center gap-4 w-[280px]">
                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 shadow-sm text-white font-bold text-xs">
                    {job.company.substring(0,2)}
                  </div>
@@ -423,4 +429,8 @@ export default function JobsPage() {
       )}
     </div>
   );
+}
+
+export default function JobsPageRoute() {
+  return <JobsPage />;
 }

@@ -7,7 +7,7 @@ import { Home, Briefcase, FileText, BrainCircuit, Settings, Sparkles, ChevronDow
 export function Sidebar() {
   const pathname = usePathname();
   const isDemo = pathname.startsWith("/demo");
-  const demoHref = isDemo ? "/demo" : undefined;
+  const demoHref = (path = "") => isDemo ? `/demo${path}` : undefined;
   
   // If we are inside a specific workspace (e.g. /workspace/1), do not show the global sidebar
   if (pathname.match(/^\/workspace\/\d+/)) {
@@ -29,32 +29,32 @@ export function Sidebar() {
       </div>
       
       <nav className="flex-1 py-4 px-3 space-y-1">
-        <Link href={demoHref || "/"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${(pathname === '/' || isDemo) ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
+        <Link href={demoHref() || "/"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${(pathname === '/' || pathname === '/demo') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
           <Home className="w-[18px] h-[18px]" />
           <span className="text-sm font-medium">首页</span>
         </Link>
-        <Link href={demoHref || "/leads"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${pathname.startsWith('/leads') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
+        <Link href={demoHref() || "/leads"} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
           <Search className="w-[18px] h-[18px]" />
           <span className="text-sm font-medium">海投线索</span>
         </Link>
-        <Link href={demoHref || "/jobs"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${pathname.startsWith('/jobs') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
+        <Link href={demoHref("/jobs") || "/jobs"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${(pathname === '/demo/jobs' || pathname.startsWith('/jobs')) ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
           <Briefcase className="w-[18px] h-[18px]" />
           <span className="text-sm font-medium">岗位管理</span>
         </Link>
-        <Link href={demoHref || "#"} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
+        <Link href={demoHref() || "#"} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
           <FileText className="w-[18px] h-[18px]" />
           <span className="text-sm font-medium">面试中心</span>
         </Link>
-        <Link href={demoHref || "/memory"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${pathname.startsWith('/memory') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
+        <Link href={demoHref() || "/memory"} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
           <BrainCircuit className="w-[18px] h-[18px]" />
           <span className="text-sm font-medium">记忆库</span>
         </Link>
-        <Link href={demoHref || "/badcases"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${pathname.startsWith('/badcases') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
+        <Link href={demoHref() || "/badcases"} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
           <Bug className="w-[18px] h-[18px]" />
           <span className="text-sm font-medium">问题复盘</span>
         </Link>
         <div className="pt-4 mt-4 border-t border-border">
-          <Link href={demoHref || "/settings"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${pathname.startsWith('/settings') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
+          <Link href={demoHref() || "/settings"} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
             <Settings className="w-[18px] h-[18px]" />
             <span className="text-sm font-medium">设置</span>
           </Link>

@@ -1629,6 +1629,18 @@ def update_demo_offer(job_id: int, data: OfferUpdate, db: Session = Depends(get_
     _get_demo_job_or_404(job_id, db)
     return update_offer(job_id, data, db)
 
+
+@app.put("/api/demo/jobs/{job_id}/status")
+def update_demo_status(job_id: int, req: StatusUpdate, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return update_job_status(job_id, req, db)
+
+
+@app.delete("/api/demo/jobs/{job_id}")
+def delete_demo_job(job_id: int, db: Session = Depends(get_db)):
+    _get_demo_job_or_404(job_id, db)
+    return delete_job(job_id, db)
+
 if __name__ == "__main__":
     uvicorn.run(
         "runtime.api.api_server:app",
