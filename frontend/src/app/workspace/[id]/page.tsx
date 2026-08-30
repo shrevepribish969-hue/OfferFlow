@@ -106,6 +106,7 @@ export default function WorkspaceV3() {
   const [aiRuns, setAiRuns] = useState<AIRun[]>([]);
   const [isCanvasOpen, setIsCanvasOpen] = useState(false);
   const [canvasWidth, setCanvasWidth] = useState(38);
+  const [isDemoResumeOpen, setIsDemoResumeOpen] = useState(false);
   const workspaceRef = useRef<HTMLDivElement>(null);
 
   const fetchFeedbackEvents = async (jobId: string | number) => {
@@ -629,6 +630,8 @@ export default function WorkspaceV3() {
     <div className="flex flex-col h-screen w-full bg-[#f4f5f8] overflow-hidden font-sans">
       <JobOverviewHeader
         job={job}
+        backHref={searchParams.get("demo") === "1" ? "/demo/jobs" : "/"}
+        onShowDemoResume={job.workflow_data?.demo_resume ? () => setIsDemoResumeOpen(true) : undefined}
         currentStageLabel={isCanvasOpen ? activeStageObj?.label : undefined}
         isCanvasOpen={isCanvasOpen}
         hasArtifacts={Boolean(defaultArtifactStage)}
@@ -692,6 +695,22 @@ export default function WorkspaceV3() {
           </section>
         )}
       </div>
+      {isDemoResumeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/35 p-4" onClick={() => setIsDemoResumeOpen(false)}>
+          <section className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div><p className="text-xs font-bold uppercase tracking-wider text-indigo-500">Public Demo</p><h2 className="mt-1 text-xl font-bold text-slate-900">内置候选人简历</h2><p className="mt-1 text-sm text-slate-500">以下是用于本次体验的虚拟资料，不会读取或修改真实简历。</p></div>
+              <button onClick={() => setIsDemoResumeOpen(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="关闭"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="space-y-5 text-sm text-slate-700">
+              <div className="rounded-xl bg-indigo-50 p-4"><div className="font-bold text-slate-900">{job.workflow_data.demo_resume?.basics?.name || "虚拟候选人"}</div><div className="mt-1 text-indigo-700">求职目标：{job.workflow_data.demo_resume?.basics?.target_role || "AI 产品经理"}</div></div>
+              <div><h3 className="font-bold text-slate-900">教育背景</h3>{(job.workflow_data.demo_resume?.education || []).map((item: any, index: number) => <p key={index} className="mt-2 leading-6">{item.school} · {item.major} · {item.degree}（{item.period}）</p>)}</div>
+              <div><h3 className="font-bold text-slate-900">实践经历</h3><div className="mt-2 space-y-3">{(job.workflow_data.demo_resume?.experience || []).map((item: any, index: number) => <div key={index} className="rounded-xl border border-slate-200 p-4"><div className="font-semibold text-slate-900">{item.company} · {item.role}</div><ul className="mt-2 list-disc space-y-1 pl-5 leading-6 text-slate-600">{(item.highlights || []).map((highlight: string, itemIndex: number) => <li key={itemIndex}>{highlight}</li>)}</ul></div>)}</div></div>
+              <div><h3 className="font-bold text-slate-900">技能</h3><div className="mt-2 flex flex-wrap gap-2">{(job.workflow_data.demo_resume?.skills || []).map((skill: string) => <span key={skill} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{skill}</span>)}</div></div>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

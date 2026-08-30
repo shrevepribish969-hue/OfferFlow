@@ -4,17 +4,19 @@ import Link from 'next/link';
 
 interface JobOverviewHeaderProps {
   job: any;
+  backHref?: string;
+  onShowDemoResume?: () => void;
   currentStageLabel?: string;
   isCanvasOpen?: boolean;
   hasArtifacts?: boolean;
   onToggleCanvas?: () => void;
 }
 
-export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, hasArtifacts = false, onToggleCanvas }: JobOverviewHeaderProps) => {
+export const JobOverviewHeader = ({ job, backHref = "/", onShowDemoResume, currentStageLabel, isCanvasOpen, hasArtifacts = false, onToggleCanvas }: JobOverviewHeaderProps) => {
   return (
     <header className="h-16 flex items-center justify-between px-5 border-b border-slate-200 shrink-0 bg-white z-10 relative">
       <div className="flex items-center gap-4">
-        <Link href="/" className="text-slate-400 hover:text-slate-700 transition-colors bg-slate-50 hover:bg-slate-100 p-2 rounded-full">
+        <Link href={backHref} className="text-slate-400 hover:text-slate-700 transition-colors bg-slate-50 hover:bg-slate-100 p-2 rounded-full">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex items-center gap-4">
@@ -37,6 +39,11 @@ export const JobOverviewHeader = ({ job, currentStageLabel, isCanvasOpen, hasArt
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {onShowDemoResume && (
+          <button onClick={onShowDemoResume} className="hidden sm:flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors">
+            查看内置简历
+          </button>
+        )}
         <div className="hidden md:flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700">
           <Sparkles className="w-3.5 h-3.5" />
           Case Agent 在线
