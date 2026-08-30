@@ -10,9 +10,6 @@ from ..services.resume_parser_service import normalize_resume_schema
 
 # Load Environment
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
-API_KEY = os.getenv("DEEPSEEK_API_KEY")
-BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "deepseek-chat")
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -29,6 +26,14 @@ def load_prompt(prompt_name: str) -> str:
         
     return base_content + "\n\n" + skill_content
 
+
+def model_settings() -> tuple[str, str, str]:
+    """Read model configuration at call time without logging secret values."""
+    api_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+    base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+    model_name = os.getenv("MODEL_NAME", "deepseek-chat")
+    return api_key, base_url, model_name
+
 class SkillExecutor:
     @staticmethod
     async def _call_llm_bounded(
@@ -40,16 +45,27 @@ class SkillExecutor:
     ) -> dict:
         """Run a long generation off the event loop with a hard outer limit."""
         msg_str = json.dumps(user_payload, ensure_ascii=False)
+        api_key, base_url, model_name = model_settings()
+        if not api_key:
+            err = SkillExecutor._format_error(
+                "skill_executor",
+                "1.0",
+                "MODEL_API_KEY_MISSING",
+                "模型服务尚未配置。请在 Render 的 offerflow-api 环境变量中设置 DEEPSEEK_API_KEY，然后重新部署。",
+                False,
+            )
+            err["error"] = True
+            return err
 
         def invoke() -> dict:
             client = OpenAI(
-                api_key=API_KEY,
-                base_url=BASE_URL,
+                api_key=api_key,
+                base_url=base_url,
                 timeout=min(timeout_seconds, 90.0),
                 max_retries=0,
             )
             response = client.chat.completions.create(
-                model=MODEL_NAME,
+                model=model_name,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": msg_str},
@@ -89,19 +105,30 @@ class SkillExecutor:
         max_attempts: int = 3,
         max_tokens: int | None = None,
     ) -> dict:
-        client = AsyncOpenAI(
-            api_key=API_KEY,
-            base_url=BASE_URL,
-            timeout=timeout_seconds,
-            max_retries=0,
-        )
         msg_str = json.dumps(user_payload, ensure_ascii=False)
+        api_key, base_url, model_name = model_settings()
+        if not api_key:
+            err = SkillExecutor._format_error(
+                "skill_executor",
+                "1.0",
+                "MODEL_API_KEY_MISSING",
+                "模型服务尚未配置。请在 Render 的 offerflow-api 环境变量中设置 DEEPSEEK_API_KEY，然后重新部署。",
+                False,
+            )
+            err["error"] = True
+            return err
         try:
+            client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=base_url,
+                timeout=timeout_seconds,
+                max_retries=0,
+            )
             response = None
             for attempt in range(max_attempts):
                 try:
                     request_kwargs = {
-                        "model": MODEL_NAME,
+                        "model": model_name,
                         "messages": [
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": msg_str}
