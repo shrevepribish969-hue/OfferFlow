@@ -8,7 +8,7 @@ export function Sidebar() {
   const pathname = usePathname();
   
   // If we are inside a specific workspace (e.g. /workspace/1), do not show the global sidebar
-  if (pathname.match(/^\/workspace\/\d+/) || pathname.startsWith("/demo")) {
+  if (pathname.match(/^\/workspace\/\d+/)) {
     return null;
   }
   

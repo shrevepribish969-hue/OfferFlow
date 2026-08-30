@@ -32,9 +32,9 @@ const JOBS_CACHE_KEY = "offerflow-render-jobs-cache-v1";
 const JOBS_FETCH_TIMEOUT_MS = 90_000;
 const JOBS_RETRY_DELAYS_MS = [12_000, 25_000, 45_000];
 
-function readCachedJobs(): JobCase[] {
+function readCachedJobs(cacheKey = JOBS_CACHE_KEY): JobCase[] {
   try {
-    const cached = window.localStorage.getItem(JOBS_CACHE_KEY);
+    const cached = window.localStorage.getItem(cacheKey);
     if (!cached) return [];
     const parsed = JSON.parse(cached);
     return Array.isArray(parsed) ? parsed : [];
@@ -43,16 +43,19 @@ function readCachedJobs(): JobCase[] {
   }
 }
 
-function writeCachedJobs(data: JobCase[]) {
+function writeCachedJobs(data: JobCase[], cacheKey = JOBS_CACHE_KEY) {
   try {
-    window.localStorage.setItem(JOBS_CACHE_KEY, JSON.stringify(data));
+    window.localStorage.setItem(cacheKey, JSON.stringify(data));
   } catch {
     // Cache is only a resilience layer; the live database remains authoritative.
   }
 }
 
-export default function Dashboard() {
+export function Dashboard({ demoMode = false }: { demoMode?: boolean }) {
   const router = useRouter();
+  const apiBase = demoMode ? "/backend-api/demo/jobs" : "/backend-api/jobs";
+  const jobsCacheKey = demoMode ? `${JOBS_CACHE_KEY}-public-demo` : JOBS_CACHE_KEY;
+  const workspaceHref = (jobId: number) => `/workspace/${jobId}${demoMode ? "?demo=1" : ""}`;
   const [jobs, setJobs] = useState<JobCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [jobsLoadError, setJobsLoadError] = useState<string | null>(null);
@@ -194,18 +197,18 @@ export default function Dashboard() {
   const fetchJobs = async (attempt = 0, background = false) => {
     try {
       if (!background) setIsLoading(true);
-      const response = await fetch("/backend-api/jobs", {
+      const response = await fetch(apiBase, {
         cache: "no-store",
         signal: AbortSignal.timeout(JOBS_FETCH_TIMEOUT_MS),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setJobs(data);
-      writeCachedJobs(data);
+      writeCachedJobs(data, jobsCacheKey);
       setJobsLoadError(null);
     } catch (error) {
       console.error("Failed to fetch jobs:", error);
-      const cachedJobs = readCachedJobs();
+      const cachedJobs = readCachedJobs(jobsCacheKey);
       if (cachedJobs.length > 0) {
         setJobs(cachedJobs);
         setJobsLoadError("线上服务正在唤醒，已先显示上次成功加载的数据。");
@@ -223,13 +226,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [apiBase, jobsCacheKey]);
 
   const handleCreateJob = async () => {
     if (!jdContent.trim()) return;
     try {
       setIsSubmitting(true);
-      const response = await fetch("/backend-api/jobs", {
+      const response = await fetch(apiBase, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jd_content: jdContent })
@@ -238,7 +241,7 @@ export default function Dashboard() {
         const newJob = await response.json();
         setIsModalOpen(false);
         setJdContent("");
-        router.push(`/workspace/${newJob.id}`);
+        router.push(workspaceHref(newJob.id));
       }
     } catch (error) {
       console.error("Failed to create job:", error);
@@ -458,7 +461,7 @@ export default function Dashboard() {
                     className="p-4 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-indigo-300 transition-all flex items-center justify-between gap-4"
                   >
                     <Link
-                      href={`/workspace/${t.jobId}`}
+                      href={workspaceHref(t.jobId)}
                       className="min-w-0 flex-1 group"
                     >
                       <p className="text-xs font-semibold text-slate-400">{t.company}</p>
@@ -488,7 +491,7 @@ export default function Dashboard() {
                         </a>
                       )}
                       <Link
-                        href={`/workspace/${t.jobId}`}
+                        href={workspaceHref(t.jobId)}
                         className="px-3 py-2 bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5 border border-slate-200"
                       >
                         Job Case <ArrowRight className="w-3.5 h-3.5" />
@@ -510,7 +513,7 @@ export default function Dashboard() {
                       className="p-4 rounded-2xl border border-slate-200 bg-white flex items-center justify-between gap-4"
                     >
                       <Link
-                        href={`/workspace/${t.jobId}`}
+                        href={workspaceHref(t.jobId)}
                         className="min-w-0 flex-1 group"
                       >
                         <p className="text-xs font-semibold text-slate-400">{t.company}</p>
@@ -525,7 +528,7 @@ export default function Dashboard() {
                             <ExternalLink className="w-3.5 h-3.5" /> 岗位链接
                           </a>
                         )}
-                        <Link href={`/workspace/${t.jobId}`} className="px-3 py-2 bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5 border border-slate-200">
+                        <Link href={workspaceHref(t.jobId)} className="px-3 py-2 bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5 border border-slate-200">
                           Job Case <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                       </div>
@@ -566,7 +569,7 @@ export default function Dashboard() {
                       dayTasks.map((t) => (
                         <Link
                           key={t.id}
-                          href={`/workspace/${t.jobId}`}
+                          href={workspaceHref(t.jobId)}
                           className="block bg-white p-2.5 rounded-xl border border-slate-200 hover:border-indigo-400 transition shadow-2xs group"
                         >
                           <p className="text-[10px] font-semibold text-slate-400 truncate">{t.company}</p>
@@ -624,4 +627,8 @@ export default function Dashboard() {
       )}
     </div>
   );
+}
+
+export default function HomePage() {
+  return <Dashboard />;
 }
