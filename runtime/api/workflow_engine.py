@@ -34,6 +34,19 @@ def model_settings() -> tuple[str, str, str]:
     model_name = os.getenv("MODEL_NAME", "deepseek-chat")
     return api_key, base_url, model_name
 
+
+def safe_model_error(exc: Exception) -> str:
+    """Return an actionable message without exposing SDK or network internals."""
+    message = str(exc).lower()
+    status_code = getattr(exc, "status_code", None)
+    if "unexpected keyword argument 'proxies'" in message:
+        return "模型客户端依赖版本不兼容，请重新部署后再试。"
+    if status_code in {401, 403} or "authentication" in message or "invalid api key" in message:
+        return "模型服务拒绝了当前密钥，请检查 Render 中的 DEEPSEEK_API_KEY 是否有效。"
+    if status_code == 429 or "rate limit" in message or "insufficient" in message:
+        return "模型服务额度不足或请求过于频繁，请检查账户余额后稍后重试。"
+    return f"模型服务暂时不可用（{exc.__class__.__name__}），请稍后重试。"
+
 class SkillExecutor:
     @staticmethod
     async def _call_llm_bounded(
@@ -91,7 +104,7 @@ class SkillExecutor:
             return task.result()
         except Exception as exc:
             err = SkillExecutor._format_error(
-                "skill_executor", "1.0", "LLM_CALL_FAILED", str(exc), False
+                "skill_executor", "1.0", "LLM_CALL_FAILED", safe_model_error(exc), False
             )
             err["error"] = True
             return err
@@ -160,7 +173,7 @@ class SkillExecutor:
                 
             return json.loads(text)
         except Exception as e:
-            err = SkillExecutor._format_error("skill_executor", "1.0", "LLM_CALL_FAILED", str(e), False)
+            err = SkillExecutor._format_error("skill_executor", "1.0", "LLM_CALL_FAILED", safe_model_error(e), False)
             err["error"] = True
             return err
 

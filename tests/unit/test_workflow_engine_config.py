@@ -2,7 +2,7 @@ import os
 import unittest
 from unittest.mock import patch
 
-from runtime.api.workflow_engine import SkillExecutor, model_settings
+from runtime.api.workflow_engine import SkillExecutor, model_settings, safe_model_error
 
 
 class WorkflowEngineConfigTests(unittest.IsolatedAsyncioTestCase):
@@ -34,6 +34,12 @@ class WorkflowEngineConfigTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["error_code"], "MODEL_API_KEY_MISSING")
         self.assertNotIn("api_key client option", result["error_message"])
         client.assert_not_called()
+
+    def test_sdk_dependency_error_is_sanitized(self):
+        error = TypeError("AsyncClient.__init__() got an unexpected keyword argument 'proxies'")
+        message = safe_model_error(error)
+        self.assertIn("依赖版本不兼容", message)
+        self.assertNotIn("proxies", message)
 
 
 if __name__ == "__main__":
