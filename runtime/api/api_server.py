@@ -1483,13 +1483,17 @@ async def chat_with_agent(job_id: int, req: ChatRequest, db: Session = Depends(g
 # keeps a shared link useful without exposing the owner's jobs, resume or chat.
 DEMO_MARKER = "offerflow-public-demo-v1"
 DEMO_RESUME = {
-    "basics": {"name": "林知夏", "target_role": "AI 产品经理"},
-    "education": [{"school": "华中科技大学", "major": "信息管理与信息系统", "degree": "硕士", "period": "2024.09-2027.06"}],
-    "experience": [
-        {"company": "启明教育科技", "role": "产品实习生", "highlights": ["参与课堂分析产品从需求调研到上线，结合音视频与教案信息设计报告链路。", "使用 SQL 分析核心功能使用情况，协同算法与研发迭代生成质量。"]},
-        {"company": "校园 AI 创新实验室", "role": "产品负责人", "highlights": ["组织 5 人小组完成知识库问答工具，负责用户访谈、Prompt 设计和效果评估。"]},
+    "personal_info": {"name": "林知夏", "contact": "138-****-2746 | lin.zhixia@example.com", "job_intention": "AI 产品经理 / 产品策略", "availability": "2027 年 7 月", "preferred_locations": ["北京", "上海", "深圳"], "summary": "信息管理硕士，具备教育科技与 AI 应用产品实习经历，关注用户需求、数据验证与可落地的产品方案。"},
+    "personal_strengths": ["产品思维：能从用户场景拆解需求，完成调研、原型和上线复盘。", "数据能力：熟悉 SQL 与指标分析，用数据定位问题并验证迭代效果。", "AI 应用：参与 LLM 内容生成和知识库问答产品，了解 Prompt、RAG 与效果评估。"],
+    "education": [{"school": "华中科技大学", "degree": "硕士", "major": "信息管理与信息系统", "date": "2024.09 - 2027.06"}, {"school": "南京邮电大学", "degree": "本科", "major": "电子商务", "date": "2020.09 - 2024.06"}],
+    "work_experience": [
+        {"company": "启明教育科技有限公司", "role": "产品实习生", "date": "2026.03 - 2026.08", "descriptions": ["课堂分析产品：参与教师端课堂报告模块迭代，梳理备课、授课、复盘场景，输出 PRD、原型与验收清单。", "效果优化：结合用户访谈和埋点数据定位报告阅读完成率偏低问题，协同算法团队调整摘要结构，核心页面停留时长提升 18%。", "数据分析：使用 SQL 统计功能渗透与异常反馈，搭建周度看板支持产品复盘。"]},
+        {"company": "智见信息技术有限公司", "role": "产品运营实习生", "date": "2025.07 - 2025.12", "descriptions": ["内容增长：参与知识内容社区的新用户引导和创作者激励策略，完成竞品分析与用户分层。", "实验迭代：协助设计 A/B 测试，跟踪转化漏斗并输出复盘建议，提升新用户次日留存。"]}
     ],
-    "skills": ["产品需求分析", "用户研究", "SQL", "数据分析", "Prompt Engineering", "LLM 应用"],
+    "project_experience": [{"project": "AI 教学知识库助手", "role": "产品负责人", "date": "2025.10 - 2026.01", "descriptions": ["负责从用户访谈、需求优先级到交互原型的完整设计，组织 5 人团队完成校内试点。", "设计 RAG 问答链路与评价维度，结合人工标注案例优化 Prompt，试用用户满意度达到 4.5/5。"]}],
+    "campus_experience": [{"organization": "校研究生会职业发展部", "role": "项目负责人", "date": "2024.09 - 2025.06", "descriptions": ["策划 3 场产品求职分享活动，负责嘉宾沟通、内容策划和活动复盘。"]}],
+    "skills": ["产品需求分析", "用户研究", "SQL", "数据分析", "Axure/Figma", "Prompt Engineering", "LLM 应用"],
+    "awards_certificates": ["全国大学生电子商务“创新、创意及创业”挑战赛省级一等奖", "大学英语六级（CET-6）"],
 }
 
 DEMO_JOB_SEEDS = [
@@ -1541,8 +1545,14 @@ def _get_demo_job_or_404(job_id: int, db: Session) -> models.JobCase:
 
 def _ensure_demo_jobs(db: Session) -> list[models.JobCase]:
     jobs = [job for job in db.query(models.JobCase).all() if _is_demo_job(job)]
+    for job in jobs:
+        workflow_data = dict(job.workflow_data or {})
+        if workflow_data.get("demo_resume_version") != 2:
+            workflow_data["demo_resume"] = DEMO_RESUME
+            workflow_data["demo_resume_version"] = 2
+            job.workflow_data = workflow_data
     existing_pairs = {(job.company, job.role) for job in jobs}
-    created = False
+    created = any((job.workflow_data or {}).get("demo_resume_version") == 2 for job in jobs)
     for index, seed in enumerate(DEMO_JOB_SEEDS):
         if (seed["company"], seed["role"]) in existing_pairs:
             continue
@@ -1550,6 +1560,7 @@ def _ensure_demo_jobs(db: Session) -> list[models.JobCase]:
             "demo": True,
             "demo_marker": DEMO_MARKER,
             "demo_resume": DEMO_RESUME,
+            "demo_resume_version": 2,
             "source_url": "https://example.com/offerflow-demo",
             "apply_status": {"applied": index == 1, "link": "", "apply_time": "", "reminder_time": ""},
         }
@@ -1576,7 +1587,7 @@ def create_demo_job(payload: JobCreate, db: Session = Depends(get_db)):
         role="自定义岗位",
         status="待分析",
         jd_content=jd_content,
-        workflow_data={"demo": True, "demo_marker": DEMO_MARKER, "demo_resume": DEMO_RESUME},
+        workflow_data={"demo": True, "demo_marker": DEMO_MARKER, "demo_resume": DEMO_RESUME, "demo_resume_version": 2},
         memory_tags=["公开 Demo", "自定义岗位"],
     )
     db.add(job)

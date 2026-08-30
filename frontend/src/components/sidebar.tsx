@@ -29,7 +29,7 @@ export function Sidebar() {
       </div>
       
       <nav className="flex-1 py-4 px-3 space-y-1">
-        <Link href={demoHref("/jobs") || "/"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${(pathname === '/' || pathname === '/demo') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
+        <Link href={demoHref("/home") || "/"} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${(pathname === '/' || pathname === '/demo/home') ? 'bg-indigo-50 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`}>
           <Home className="w-[18px] h-[18px]" />
           <span className="text-sm font-medium">首页</span>
         </Link>
