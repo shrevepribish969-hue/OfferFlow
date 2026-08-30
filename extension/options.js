@@ -2,6 +2,69 @@ const form = document.getElementById('profileForm');
 const saveStatus = document.getElementById('saveStatus');
 const educationList = document.getElementById('educationList');
 const addEducationBtn = document.getElementById('addEducationBtn');
+const connectionForm = document.getElementById('connectionForm');
+const connectionStatus = document.getElementById('connectionStatus');
+const serviceUrlInput = document.getElementById('serviceUrl');
+const serviceUsernameInput = document.getElementById('serviceUsername');
+const servicePasswordInput = document.getElementById('servicePassword');
+const testConnectionBtn = document.getElementById('testConnectionBtn');
+
+function normalizeServiceUrl(value) {
+  return String(value || 'https://offerflow-web.onrender.com/backend-api').replace(/\/$/, '');
+}
+
+function basicAuthorization(username, password) {
+  if (!username || !password) return null;
+  const bytes = new TextEncoder().encode(`${username}:${password}`);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return `Basic ${btoa(binary)}`;
+}
+
+function currentConnection() {
+  return {
+    serviceUrl: normalizeServiceUrl(serviceUrlInput.value),
+    username: serviceUsernameInput.value.trim() || 'offerflow',
+    password: servicePasswordInput.value
+  };
+}
+
+async function loadConnection() {
+  const { offerflowConnection = {} } = await chrome.storage.local.get('offerflowConnection');
+  serviceUrlInput.value = normalizeServiceUrl(offerflowConnection.serviceUrl);
+  serviceUsernameInput.value = offerflowConnection.username || 'offerflow';
+  servicePasswordInput.value = offerflowConnection.password || '';
+}
+
+connectionForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  await chrome.storage.local.set({ offerflowConnection: currentConnection() });
+  connectionStatus.textContent = '✓ 连接设置已保存到当前浏览器';
+  window.setTimeout(() => { connectionStatus.textContent = ''; }, 3000);
+});
+
+testConnectionBtn.addEventListener('click', async () => {
+  const connection = currentConnection();
+  const authorization = basicAuthorization(connection.username, connection.password);
+  const headers = {};
+  if (authorization) headers.Authorization = authorization;
+  testConnectionBtn.disabled = true;
+  connectionStatus.textContent = '正在连接…';
+  try {
+    const response = await fetch(`${connection.serviceUrl}/leads`, {
+      headers,
+      credentials: 'include'
+    });
+    if (response.status === 401) throw new Error('用户名或访问密码不正确');
+    if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+    await chrome.storage.local.set({ offerflowConnection: connection });
+    connectionStatus.textContent = '✓ 连接成功，设置已保存';
+  } catch (error) {
+    connectionStatus.textContent = `连接失败：${error.message}`;
+  } finally {
+    testConnectionBtn.disabled = false;
+  }
+});
 
 const blankEducation = () => ({
   school: '',
@@ -111,4 +174,5 @@ form.addEventListener('submit', async (event) => {
   window.setTimeout(() => { saveStatus.textContent = ''; }, 2600);
 });
 
+loadConnection();
 loadProfile();

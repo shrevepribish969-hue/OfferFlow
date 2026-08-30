@@ -51,6 +51,27 @@ async function refreshProfileSummary() {
   profileSummary.textContent = `已保存 ${populated} 项资料${educationCount ? ` · ${educationCount} 段教育` : ''}`;
 }
 
+function normalizeServiceUrl(value) {
+  return String(value || 'https://offerflow-web.onrender.com/backend-api').replace(/\/$/, '');
+}
+
+function basicAuthorization(username, password) {
+  if (!username || !password) return null;
+  const bytes = new TextEncoder().encode(`${username}:${password}`);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return `Basic ${btoa(binary)}`;
+}
+
+async function getOfferFlowConnection() {
+  const { offerflowConnection = {} } = await chrome.storage.local.get('offerflowConnection');
+  return {
+    serviceUrl: normalizeServiceUrl(offerflowConnection.serviceUrl),
+    username: String(offerflowConnection.username || 'offerflow'),
+    password: String(offerflowConnection.password || '')
+  };
+}
+
 optionsBtn.addEventListener('click', openProfilePage);
 
 fillBtn.addEventListener('click', async () => {
@@ -97,11 +118,20 @@ clipBtn.addEventListener('click', async () => {
     if (!jdText || jdText.length < 50) {
       throw new Error('页面文字太少，请选中 JD 文本后重试');
     }
-    const response = await fetch('http://localhost:8000/api/leads/clip', {
+    const connection = await getOfferFlowConnection();
+    const authorization = basicAuthorization(connection.username, connection.password);
+    const headers = { 'Content-Type': 'application/json' };
+    if (authorization) headers.Authorization = authorization;
+
+    const response = await fetch(`${connection.serviceUrl}/leads/clip`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      credentials: 'include',
       body: JSON.stringify({ source_url: tab.url, jd_content: jdText.slice(0, 10000) })
     });
+    if (response.status === 401) {
+      throw new Error('OfferFlow 认证失败，请在“编辑我的资料”中的服务连接设置里填写访问密码');
+    }
     if (!response.ok) throw new Error(`OfferFlow 服务返回 ${response.status}`);
     showStatus('职位已收藏到 OfferFlow 线索池。', 'success');
   } catch (error) {

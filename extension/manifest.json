@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OfferFlow 求职助手",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "保存个人资料，一键填写招聘网站表单，并支持将职位描述剪藏到 OfferFlow。",
   "permissions": [
     "activeTab",
@@ -12,7 +12,8 @@
     "http://localhost:8000/*",
     "http://127.0.0.1:8000/*",
     "http://localhost:8001/*",
-    "http://127.0.0.1:8001/*"
+    "http://127.0.0.1:8001/*",
+    "https://offerflow-web.onrender.com/*"
   ],
   "action": {
     "default_popup": "popup.html",

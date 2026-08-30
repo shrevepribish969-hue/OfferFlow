@@ -17,6 +17,22 @@
       </div>
     </header>
 
+    <form id="connectionForm">
+      <section class="panel">
+        <div class="section-title"><span>00</span><div><h2>OfferFlow 服务连接</h2><p>用于把当前职位收藏到你的 OfferFlow；密码仅保存在当前浏览器</p></div></div>
+        <div class="form-grid">
+          <label class="wide"><span>服务地址</span><input id="serviceUrl" type="url" placeholder="https://offerflow-web.onrender.com/backend-api"></label>
+          <label><span>用户名</span><input id="serviceUsername" autocomplete="username" placeholder="offerflow"></label>
+          <label><span>访问密码</span><input id="servicePassword" type="password" autocomplete="current-password" placeholder="Render 中 offerflow-auth 的 APP_PASSWORD"></label>
+        </div>
+        <div class="connection-actions">
+          <span id="connectionStatus" role="status" aria-live="polite"></span>
+          <button id="testConnectionBtn" type="button">测试连接</button>
+          <button type="submit">保存连接</button>
+        </div>
+      </section>
+    </form>
+
     <form id="profileForm">
       <section class="panel">
         <div class="section-title"><span>01</span><div><h2>基本信息</h2><p>用于姓名、联系方式和所在地等常见字段</p></div></div>
