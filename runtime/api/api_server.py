@@ -1505,6 +1505,26 @@ DEMO_JOB_SEEDS = [
         "company": "星河数据", "role": "数据产品实习生", "status": "面试中", "match_score": 83,
         "jd_content": "负责指标体系、数据工具与业务分析产品建设，和算法、研发团队协作落地；熟悉 SQL，能够拆解业务问题。",
     },
+    {
+        "company": "远山智能", "role": "AI 应用产品经理", "status": "待分析", "match_score": None,
+        "jd_content": "负责企业级 AI Agent 产品规划、用户场景调研与产品落地，理解工作流编排、知识库和模型评估。",
+    },
+    {
+        "company": "青橙出行", "role": "增长产品实习生", "status": "简历优化中", "match_score": 74,
+        "jd_content": "围绕拉新、留存和转化设计增长策略，搭建实验和指标分析体系，要求数据敏感度与用户洞察能力。",
+    },
+    {
+        "company": "北辰互动", "role": "社区产品经理", "status": "已投递", "match_score": 81,
+        "jd_content": "负责兴趣社区的内容分发、创作者工具和互动体验，能够使用数据验证产品策略并推动跨团队协作。",
+    },
+    {
+        "company": "知行教育", "role": "产品策略实习生", "status": "面试中", "match_score": 88,
+        "jd_content": "参与教育产品的战略研究、用户访谈、竞品分析与功能设计，要求结构化思考和良好的表达能力。",
+    },
+    {
+        "company": "光年云", "role": "B 端产品实习生", "status": "待投递", "match_score": 77,
+        "jd_content": "协助企业服务产品进行需求梳理、原型设计和上线复盘，理解 SaaS 场景与业务流程更佳。",
+    },
 ]
 
 
@@ -1521,9 +1541,11 @@ def _get_demo_job_or_404(job_id: int, db: Session) -> models.JobCase:
 
 def _ensure_demo_jobs(db: Session) -> list[models.JobCase]:
     jobs = [job for job in db.query(models.JobCase).all() if _is_demo_job(job)]
-    if jobs:
-        return sorted(jobs, key=lambda item: item.id, reverse=True)
+    existing_pairs = {(job.company, job.role) for job in jobs}
+    created = False
     for index, seed in enumerate(DEMO_JOB_SEEDS):
+        if (seed["company"], seed["role"]) in existing_pairs:
+            continue
         workflow_data = {
             "demo": True,
             "demo_marker": DEMO_MARKER,
@@ -1533,7 +1555,9 @@ def _ensure_demo_jobs(db: Session) -> list[models.JobCase]:
         }
         job = models.JobCase(**seed, workflow_data=workflow_data, memory_tags=["公开 Demo", "AI 产品"])
         db.add(job)
-    db.commit()
+        created = True
+    if created:
+        db.commit()
     return [job for job in db.query(models.JobCase).all() if _is_demo_job(job)]
 
 
