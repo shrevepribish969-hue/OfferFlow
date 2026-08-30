@@ -1,10 +1,20 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-function unauthorized() {
+function unauthorized(request: NextRequest) {
+  const headers = new Headers();
+
+  // A Basic challenge on an API, RSC prefetch, or asset response makes browsers
+  // show a site-wide login dialog even when the visible Demo page is public.
+  // Only challenge real top-level document navigations; background requests
+  // still receive a normal 401 without interrupting the visitor.
+  if (request.headers.get("sec-fetch-dest") === "document") {
+    headers.set("WWW-Authenticate", 'Basic realm="OfferFlow"');
+  }
+
   return new NextResponse("OfferFlow authentication required", {
     status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="OfferFlow"' },
+    headers,
   });
 }
 
@@ -20,26 +30,26 @@ export function proxy(request: NextRequest) {
   // Keep local development frictionless, but never expose a Render deployment
   // when its generated password is missing.
   if (!expectedPassword) {
-    return process.env.RENDER ? unauthorized() : NextResponse.next();
+    return process.env.RENDER ? unauthorized(request) : NextResponse.next();
   }
 
   const authorization = request.headers.get("authorization");
-  if (!authorization?.startsWith("Basic ")) return unauthorized();
+  if (!authorization?.startsWith("Basic ")) return unauthorized(request);
 
   try {
     const decoded = atob(authorization.slice(6));
     const separator = decoded.indexOf(":");
-    if (separator < 0) return unauthorized();
+    if (separator < 0) return unauthorized(request);
     const username = decoded.slice(0, separator);
     const password = decoded.slice(separator + 1);
     if (
       username !== (process.env.APP_USERNAME || "offerflow") ||
       password !== expectedPassword
     ) {
-      return unauthorized();
+      return unauthorized(request);
     }
   } catch {
-    return unauthorized();
+    return unauthorized(request);
   }
 
   return NextResponse.next();
