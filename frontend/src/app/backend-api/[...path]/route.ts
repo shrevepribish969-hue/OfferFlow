@@ -3,7 +3,10 @@ import { NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const TRANSIENT_STATUS_CODES = new Set([502, 503, 504]);
+// Render/Cloudflare can briefly answer 429 while a free service is waking or
+// absorbing a burst of workspace requests. Treat it like the other transient
+// gateway statuses so a conversation is not failed on the first response.
+const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
 const RETRY_DELAYS_MS = [0, 1500, 4000];
 
 function backendUrl() {
