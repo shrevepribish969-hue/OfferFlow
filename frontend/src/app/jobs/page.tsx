@@ -21,9 +21,9 @@ const JOBS_CACHE_KEY = "offerflow-render-jobs-cache-v1";
 const JOBS_FETCH_TIMEOUT_MS = 90_000;
 const JOBS_RETRY_DELAYS_MS = [12_000, 25_000, 45_000];
 
-function readCachedJobs(): JobCase[] {
+function readCachedJobs(cacheKey = JOBS_CACHE_KEY): JobCase[] {
   try {
-    const cached = window.localStorage.getItem(JOBS_CACHE_KEY);
+    const cached = window.localStorage.getItem(cacheKey);
     if (!cached) return [];
     const parsed = JSON.parse(cached);
     return Array.isArray(parsed) ? parsed : [];
@@ -32,9 +32,9 @@ function readCachedJobs(): JobCase[] {
   }
 }
 
-function writeCachedJobs(data: JobCase[]) {
+function writeCachedJobs(data: JobCase[], cacheKey = JOBS_CACHE_KEY) {
   try {
-    window.localStorage.setItem(JOBS_CACHE_KEY, JSON.stringify(data));
+    window.localStorage.setItem(cacheKey, JSON.stringify(data));
   } catch {
     // Cache is only a resilience layer; the live database remains authoritative.
   }
@@ -43,6 +43,7 @@ function writeCachedJobs(data: JobCase[]) {
 export function JobsPage({ demoMode = false }: { demoMode?: boolean }) {
   const router = useRouter();
   const apiBase = demoMode ? "/backend-api/demo/jobs" : "/backend-api/jobs";
+  const jobsCacheKey = demoMode ? `${JOBS_CACHE_KEY}-public-demo` : JOBS_CACHE_KEY;
   const workspaceHref = (jobId: number) => `/workspace/${jobId}${demoMode ? "?demo=1" : ""}`;
   const [jobs, setJobs] = useState<JobCase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,11 +64,11 @@ export function JobsPage({ demoMode = false }: { demoMode?: boolean }) {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setJobs(data);
-      writeCachedJobs(data);
+      writeCachedJobs(data, jobsCacheKey);
       setJobsLoadError(null);
     } catch (error) {
       console.error("Failed to fetch jobs:", error);
-      const cachedJobs = readCachedJobs();
+      const cachedJobs = readCachedJobs(jobsCacheKey);
       if (cachedJobs.length > 0) {
         setJobs(cachedJobs);
         setJobsLoadError("线上服务正在唤醒，已先显示上次成功加载的数据。");
@@ -85,7 +86,7 @@ export function JobsPage({ demoMode = false }: { demoMode?: boolean }) {
 
   useEffect(() => {
     fetchJobs();
-  }, [apiBase]);
+  }, [apiBase, jobsCacheKey]);
 
   const handleDeleteJob = async (jobId: number, e: React.MouseEvent) => {
     e.preventDefault();

@@ -57,6 +57,37 @@ interface AIRun {
   started_at?: string | null;
 }
 
+const DEMO_JOBS_CACHE_KEY = "offerflow-render-jobs-cache-v1-public-demo";
+const LEGACY_JOBS_CACHE_KEY = "offerflow-render-jobs-cache-v1";
+const JOB_LOAD_RETRY_DELAYS_MS = [0, 1500, 4000];
+
+function readCachedDemoJob(jobId: number): JobCase | null {
+  try {
+    for (const cacheKey of [DEMO_JOBS_CACHE_KEY, LEGACY_JOBS_CACHE_KEY]) {
+      const raw = window.localStorage.getItem(cacheKey);
+      if (!raw) continue;
+      const jobs = JSON.parse(raw);
+      if (!Array.isArray(jobs)) continue;
+      const cachedJob = jobs.find((item: JobCase) => Number(item.id) === jobId);
+      if (cachedJob) return cachedJob;
+    }
+  } catch {
+    // The live request and retry path remain authoritative.
+  }
+  return null;
+}
+
+function cacheDemoJob(job: JobCase) {
+  try {
+    const raw = window.localStorage.getItem(DEMO_JOBS_CACHE_KEY);
+    const jobs: JobCase[] = raw && Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
+    const nextJobs = [job, ...jobs.filter((item) => Number(item.id) !== Number(job.id))];
+    window.localStorage.setItem(DEMO_JOBS_CACHE_KEY, JSON.stringify(nextJobs));
+  } catch {
+    // Cache is a resilience layer only.
+  }
+}
+
 const sanitizeAssistantText = (value: unknown) => {
   let text = String(value || "");
   const internalAgentNames = [
@@ -89,6 +120,7 @@ export default function WorkspaceV3() {
   const apiBase = searchParams.get("demo") === "1" ? "/backend-api/demo/jobs" : "/backend-api/jobs";
   
   const [job, setJob] = useState<JobCase | null>(null);
+  const [jobLoadError, setJobLoadError] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -137,10 +169,42 @@ export default function WorkspaceV3() {
   // Fetch Job & Chat History
   useEffect(() => {
     if (params?.id) {
-      fetch(`${apiBase}/${params.id}`)
-        .then((res) => res.json())
-        .then((data) => setJob(data))
-        .catch((err) => console.error(err));
+      const jobId = Number(params.id);
+      const isDemo = searchParams.get("demo") === "1";
+      let cancelled = false;
+
+      if (isDemo) {
+        const cachedJob = readCachedDemoJob(jobId);
+        if (cachedJob) setJob(cachedJob);
+      }
+
+      const loadJob = async () => {
+        let lastError: unknown;
+        for (const delayMs of JOB_LOAD_RETRY_DELAYS_MS) {
+          if (delayMs) await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+          if (cancelled) return;
+          try {
+            const res = await fetch(`${apiBase}/${params.id}`, {
+              cache: "no-store",
+              signal: AbortSignal.timeout(90_000),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (cancelled) return;
+            setJob(data);
+            setJobLoadError(null);
+            if (isDemo) cacheDemoJob(data);
+            return;
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        if (!cancelled) {
+          console.error("Failed to load workspace job:", lastError);
+          setJobLoadError("岗位详情暂时无法连接，请重新加载或返回岗位列表。\n");
+        }
+      };
+      void loadJob();
 
       fetch(`${apiBase}/${params.id}/chat`)
         .then((res) => res.json())
@@ -201,8 +265,11 @@ export default function WorkspaceV3() {
 
       fetchFeedbackEvents(params.id as string);
       fetchAiRuns(params.id as string);
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [params, apiBase]);
+  }, [params, apiBase, searchParams]);
 
   useEffect(() => {
     if (!chatLoaded || !openingLoaded || !job) return;
@@ -391,7 +458,21 @@ export default function WorkspaceV3() {
   };
 
   if (!job) {
-    return <div className="p-8 text-slate-400 animate-pulse text-center w-full h-screen flex items-center justify-center">Loading Workspace...</div>;
+    if (jobLoadError) {
+      return (
+        <div className="w-full h-screen flex items-center justify-center bg-slate-50 p-6">
+          <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <h1 className="text-lg font-bold text-slate-900">岗位详情暂时没有加载出来</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">{jobLoadError}</p>
+            <div className="mt-6 flex justify-center gap-3">
+              <button onClick={() => window.location.reload()} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700">重新加载</button>
+              <a href="/demo/jobs" className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">返回岗位列表</a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return <div className="p-8 text-slate-400 animate-pulse text-center w-full h-screen flex items-center justify-center">正在加载岗位详情，请稍候…</div>;
   }
 
   // Handlers for Workspace View buttons
