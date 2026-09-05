@@ -209,11 +209,22 @@ export function Dashboard({ demoMode = false }: { demoMode?: boolean }) {
     } catch (error) {
       console.error("Failed to fetch jobs:", error);
       const cachedJobs = readCachedJobs(jobsCacheKey);
+      const status = error instanceof Error ? error.message : "";
       if (cachedJobs.length > 0) {
         setJobs(cachedJobs);
-        setJobsLoadError("线上服务正在唤醒，已先显示上次成功加载的数据。");
+        setJobsLoadError(
+          status.includes("HTTP 401")
+            ? "登录状态已失效，请刷新页面后重新登录。"
+            : status.includes("HTTP 429")
+              ? "线上请求较多，已先显示上次成功加载的数据，正在自动重试。"
+              : "线上连接暂时不稳定，已先显示上次成功加载的数据，正在自动重试。",
+        );
       } else {
-        setJobsLoadError("线上服务正在唤醒，正在自动重试。");
+        setJobsLoadError(
+          status.includes("HTTP 401")
+            ? "登录状态已失效，请刷新页面后重新登录。"
+            : "线上连接暂时不稳定，正在自动重试。",
+        );
       }
       const delay = JOBS_RETRY_DELAYS_MS[attempt];
       if (delay) {

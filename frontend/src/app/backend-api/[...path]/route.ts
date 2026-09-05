@@ -34,9 +34,22 @@ async function wakeBackend(baseUrl: string) {
 
 function forwardedRequestHeaders(request: NextRequest) {
   const headers = new Headers();
-  for (const name of ["accept", "authorization", "content-type", "if-none-match"]) {
+  for (const name of ["accept", "content-type", "if-none-match"]) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
+  }
+
+  // Browser navigation can satisfy the frontend's Basic Auth challenge without
+  // repeating Authorization on every client-side fetch. Authenticate the
+  // server-to-server hop explicitly so protected API calls remain reliable.
+  const password = process.env.APP_PASSWORD;
+  if (password) {
+    const username = process.env.APP_USERNAME || "offerflow";
+    const token = Buffer.from(`${username}:${password}`).toString("base64");
+    headers.set("authorization", `Basic ${token}`);
+  } else {
+    const authorization = request.headers.get("authorization");
+    if (authorization) headers.set("authorization", authorization);
   }
   return headers;
 }

@@ -9,7 +9,7 @@ function backendUrl() {
   return normalized.replace(/\/$/, "");
 }
 
-const TRANSIENT_STATUS_CODES = new Set([502, 503, 504]);
+const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
 const RETRY_DELAYS_MS = [0, 1500, 4000];
 
 async function wait(delayMs: number) {
@@ -41,8 +41,15 @@ export async function POST(
     "Content-Type": request.headers.get("content-type") || "application/json",
     Accept: "text/event-stream",
   };
-  const authorization = request.headers.get("authorization");
-  if (authorization) headers.Authorization = authorization;
+  const password = process.env.APP_PASSWORD;
+  if (password) {
+    const username = process.env.APP_USERNAME || "offerflow";
+    const token = Buffer.from(`${username}:${password}`).toString("base64");
+    headers.Authorization = `Basic ${token}`;
+  } else {
+    const authorization = request.headers.get("authorization");
+    if (authorization) headers.Authorization = authorization;
+  }
 
   const baseUrl = backendUrl();
   let upstream: Response | undefined;
